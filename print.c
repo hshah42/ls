@@ -15,7 +15,7 @@ printLine(struct elements el) {
     }
 
     if(el.hardlinks > 0) {
-        fprintf(stdout, "%ld ", *el.hardlinks);
+        fprintf(stdout, "%hu ", *el.hardlinks);
     }
 
     if(el.owner != NULL) {
@@ -26,8 +26,8 @@ printLine(struct elements el) {
         fprintf(stdout, "%s ", el.group);
     }
 
-    if(el.size >= 0 && el.hasSize == 0) {
-        fprintf(stdout, "%ld ", *el.size);
+    if(el.size >= 0 && el.hasSize) {
+        fprintf(stdout, "%lld ", *el.size);
     }
 
     if(el.time > 0) {
@@ -43,6 +43,11 @@ printLine(struct elements el) {
 }
 
 void
+addToLine(struct elements el) {
+    fprintf(stdout, "%s \t", el.name);
+}
+
+void
 printError(char *error) {
     fprintf(stderr, "%s\n", error);
 }
@@ -50,7 +55,7 @@ printError(char *error) {
 struct elements
 getDefaultStruct() {
     struct elements el;
-    int false = 1;
+    int false = 0;
 
     el.name = NULL;
     el.strmode = NULL;
@@ -85,8 +90,13 @@ printDirectory(char *directoryName) {
 void 
 printErrors(char **errors, int *errorCount) {
     for(int i = 0; i < *errorCount; i++) {
-        fprintf(stdout, "%s \n", errors[i]);
+        printError(errors[i]);
     }
+}
+
+void
+printNewLine() {
+    fprintf(stdout, "\n");
 }
 
 void 

@@ -3,16 +3,16 @@
 #include <time.h>
 
 struct elements {
-    char   *name;
-    char   *strmode;
-    char   *owner;
-    char   *group;
-    char   *symbolicLink;
-    time_t *time;
-    long   *hardlinks;
-    long   *size;
-    ino_t  *inode;
-    int    *hasSize;
+    char     *name;
+    char     *strmode;
+    char     *owner;
+    char     *group;
+    char     *symbolicLink;
+    time_t   *time;
+    nlink_t  *hardlinks;
+    off_t    *size;
+    ino_t    *inode;
+    int      *hasSize;
 };
 
 void printLine(struct elements el);
@@ -22,3 +22,5 @@ void printFile(char **files, int *fileCount);
 void printErrors(char **errors, int *errorCount);
 void printError(char *error);
 void printDirectory(char *directoryName);
+void printNewLine();
+void addToLine(struct elements el);
