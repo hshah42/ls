@@ -77,6 +77,11 @@ printFile(char **files, int *fileCount) {
         printf("\n\n");
 }
 
+void
+printDirectory(char *directoryName) {
+    fprintf(stdout, "%s: \n", directoryName);
+}
+
 void 
 printErrors(char **errors, int *errorCount) {
     for(int i = 0; i < *errorCount; i++) {

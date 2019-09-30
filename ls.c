@@ -62,21 +62,27 @@ int
 readDir(char *pathname, struct OPT *options) {
     DIR *dir;
     struct dirent *content;
-    struct elements el;
+    struct elements el = getDefaultStruct();
 
     if((dir = opendir(pathname)) == NULL) {
         return -1; 
     }
 
+    printDirectory(pathname);
+
     while(content = readdir(dir)) {
         if(strncmp(content->d_name, ".", 1)) {
-            fprintf(stdout, "%s\n", content->d_name); 
+            el.name = content->d_name;
+            printLine(el);
         }
         else
             if(options->listAllFlag) {
-                fprintf(stdout, "%s\n", content->d_name);   
+                el.name = content->d_name;
+                printLine(el);
             }
     }
+
+    printf("\n");
 
     (void) closedir(dir);
      

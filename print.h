@@ -21,3 +21,4 @@ void print(char *directoryName, struct elements el[], int elementsCount);
 void printFile(char **files, int *fileCount);
 void printErrors(char **errors, int *errorCount);
 void printError(char *error);
+void printDirectory(char *directoryName);
