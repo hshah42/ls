@@ -1,5 +1,7 @@
 #include "print.h"
 
+const char *monthNames[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+
 void
 printLine(struct elements el) {
     struct tm *temp;
@@ -30,7 +32,7 @@ printLine(struct elements el) {
 
     if(el.time > 0) {
         temp = localtime(el.time);
-        fprintf(stdout, "%s %i %i:%i ", months[temp->tm_mon], temp->tm_mday, temp->tm_hour, temp->tm_min);
+        fprintf(stdout, "%s %i %i:%i ", monthNames[temp->tm_mon], temp->tm_mday, temp->tm_hour, temp->tm_min);
     }
 
     if(el.name != NULL) {
@@ -64,10 +66,28 @@ getDefaultStruct() {
     return el;
 }
 
+void
+printFile(char **files, int *fileCount) {
+    int addLine = 0;
+    for(int i = 0; i < *fileCount; i++) {
+        fprintf(stdout, "%s \t", files[i]);
+        addLine = 1;
+    }
+    if(addLine)
+        printf("\n\n");
+}
+
+void 
+printErrors(char **errors, int *errorCount) {
+    for(int i = 0; i < *errorCount; i++) {
+        fprintf(stdout, "%s \n", errors[i]);
+    }
+}
+
 void 
 print(char *directoryName, struct elements el[], int elementsCount) {
     fprintf(stdout, "%s: \n", directoryName);
-
+ 
     for(int i = 0; i < elementsCount; i++) {
         printLine(el[i]);
     }

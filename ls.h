@@ -25,3 +25,5 @@ struct output
 int  readDir(char *pathname, struct OPT *options);
 void setOptions(int argc, char **argv, struct OPT *options);
 void initOptions(struct OPT *options);
+void allocateFileType(char *pathname, char *errors[], int *errorIndex, char *files[], 
+                int *fileIndex, char *directories[], int *directoryIndex);

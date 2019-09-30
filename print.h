@@ -15,8 +15,9 @@ struct elements {
     int    *hasSize;
 };
 
-const char *months[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
-
 void printLine(struct elements el);
 struct elements getDefaultStruct();
 void print(char *directoryName, struct elements el[], int elementsCount);
+void printFile(char **files, int *fileCount);
+void printErrors(char **errors, int *errorCount);
+void printError(char *error);
