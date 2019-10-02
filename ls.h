@@ -30,7 +30,6 @@ struct output
 
 int readDir(char **files, struct OPT *options, int isDirnameRequired);void setOptions(int argc, char **argv, struct OPT *options);
 void initOptions(struct OPT *options);
-void allocateFileType(char *pathname, char *errors[], int *errorIndex, char *files[], 
-                int *fileIndex, char *directories[], int *directoryIndex);
+void allocateFile(int maxSize, int argc, char **argv, char **files);
 int generateElement(char *pathname, struct elements *el, struct OPT *options, FTSENT *ftsent);
 int changeDirectory(char *pathname);

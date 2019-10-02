@@ -3,7 +3,6 @@
 int
 main(int argc, char **argv) {
     (void) setprogname(argv[0]);
-    int initialErrorIndex=0, initialFileIndex=0, initialDirectoryIndex = 0;
     
     FTS *fts;
     FTSENT *ftsent;
@@ -17,19 +16,6 @@ main(int argc, char **argv) {
     setOptions(argc, argv, options);
 
     int maxSize = argc - optind; 
-    
-    char *errors[maxSize]; 
-    int  *errorIndex = &initialErrorIndex;
-
-    char *files[maxSize];
-    int  *fileIndex = &initialFileIndex;
-
-    char *directories[maxSize];
-    int  *directoryIndex = &initialDirectoryIndex;
-
-    for (int i=optind ; i<argc; i++) {
-        allocateFileType(argv[i], errors, errorIndex, files, fileIndex, directories, directoryIndex);
-    }
 
     if(optind == argc) {
         char *dir[1];
@@ -38,29 +24,22 @@ main(int argc, char **argv) {
     }
     else
     {
-        char **files = malloc(argc * sizeof(char*));
-        if (files == NULL) {
+        char **directories = malloc(argc * sizeof(char*));
+        
+        if (directories == NULL) {
             printError(strerror(errno));
             return 1;
         }
 
-        int index = 0;
-
-        for(int i = optind; i < argc; i++) {
-            files[index] = strdup(argv[i]);
-            index++;
-        }
-
-        printErrors(errors, errorIndex);
-        printFile(files, fileIndex);
+        allocateFile(maxSize, argc, argv, directories);
         
         if((argc - optind) == 1) {
-            readDir(files, options, 0);
+            readDir(directories, options, 0);
         } else {
-            readDir(files, options, 1);
+            readDir(directories, options, 1);
         }
 
-        free(files);
+        free(directories);
     }
 
     free(options);
@@ -106,7 +85,7 @@ readDir(char **files, struct OPT *options, int isDirnameRequired) {
     }
     
     if((fts = fts_open(files, flags, NULL)) == NULL) {
-        fprintf(stderr, "error: %s \n", strerror(errno));
+        printError(strerror(errno));
         return 1;
     }
 
@@ -115,7 +94,7 @@ readDir(char **files, struct OPT *options, int isDirnameRequired) {
         struct elements el = getDefaultStruct();
 
         if(ftsent->fts_level == 0) {
-            if(ftsent->fts_info == FTS_DP)
+            if(ftsent->fts_info == FTS_DP || !isDirnameRequired)
                 continue;
             printNewLine();
             printDirectory(ftsent->fts_path);
@@ -181,34 +160,47 @@ generateElement(char *path, struct elements *el, struct OPT *options, FTSENT *ft
         el->hasSize = &hasSize;
         el->time = &stats.st_atime;
         strmode(stats.st_mode, permission);
-        el->strmode = permission;
+        el->strmode = strdup(permission);
     }
 
     free(permission);
 }
 
 void
-allocateFileType(char *pathname, char *errors[], int *errorIndex, char *files[], 
-                int *fileIndex, char *directories[], int *directoryIndex) {
+allocateFile(int maxSize, int argc, char **argv, char **directories) {
+    int initialErrorIndex=0, initialFileIndex=0, initialDirectoryIndex = 0;
+    
+    char *errors[maxSize]; 
+    int  *errorIndex = &initialErrorIndex;
+
+    char *files[maxSize];
+    int  *fileIndex = &initialFileIndex;
+
     struct stat stats;
+    int index = 0;
 
-    if(stat(pathname, &stats) != 0) {
-        char *error = malloc(strlen(pathname) + strlen(strerror(errno)) + 3);
-        error[0] = '\0';
-        strcat(error, pathname);
-        strcat(error, ": ");
-        strcat(error, strerror(errno));
-        errors[*errorIndex] = error;
-        (*errorIndex)++;
-        free(error);
-        return;
+    for (int i=optind ; i < argc; i++) {
+        if(stat(argv[i], &stats) != 0) {
+            char *error = malloc(strlen(argv[i]) + strlen(strerror(errno)) + 3);
+            error[0] = '\0';
+            strcat(error, argv[i]);
+            strcat(error, ": ");
+            strcat(error, strerror(errno));
+            errors[*errorIndex] = strdup(error);
+            (*errorIndex)++;
+            free(error);
+            continue;
+        }
+
+        if(S_ISDIR(stats.st_mode)) {
+            directories[index] = argv[i];
+            index++;
+        } else {
+            files[*fileIndex] = argv[i];
+            (*fileIndex)++;
+        }
     }
 
-    if(S_ISDIR(stats.st_mode)) {
-        directories[*directoryIndex] = pathname;
-        (*directoryIndex)++;
-    } else {
-        files[*fileIndex] = pathname;
-        (*fileIndex)++;
-    }
+    printErrors(errors, errorIndex);
+    printFile(files, fileIndex);
 }
