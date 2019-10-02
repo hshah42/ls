@@ -26,13 +26,13 @@ printLine(struct elements el) {
         fprintf(stdout, "%s ", el.group);
     }
 
-    if(el.size >= 0 && el.hasSize) {
+    if(el.size >= 0 && *(el.hasSize)) {
         fprintf(stdout, "%lld ", *el.size);
     }
 
     if(el.time > 0) {
         temp = localtime(el.time);
-        fprintf(stdout, "%s %i %i:%i ", monthNames[temp->tm_mon], temp->tm_mday, temp->tm_hour, temp->tm_min);
+        fprintf(stdout, "%s %d %d:%d ", monthNames[temp->tm_mon], temp->tm_mday, temp->tm_hour, temp->tm_min);
     }
 
     if(el.name != NULL) {

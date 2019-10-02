@@ -2,16 +2,23 @@
 
 int
 main(int argc, char **argv) {
-    setprogname(argv[0]);
+    (void) setprogname(argv[0]);
     int initialErrorIndex=0, initialFileIndex=0, initialDirectoryIndex = 0;
     
+    FTS *fts;
+    FTSENT *ftsent;
+    
     struct OPT *options = malloc(sizeof(struct OPT));
+    if(options == NULL) {
+        printError(strerror(errno));
+        return 1;
+    }
 
     setOptions(argc, argv, options);
 
     int maxSize = argc - optind; 
     
-    char *errors[maxSize];
+    char *errors[maxSize]; 
     int  *errorIndex = &initialErrorIndex;
 
     char *files[maxSize];
@@ -25,21 +32,40 @@ main(int argc, char **argv) {
     }
 
     if(optind == argc) {
-        readDir(".", options, 0);
+        char *dir[1];
+        dir[0] = ".";
+        readDir(dir, options, 0);
     }
     else
     {
+        char **files = malloc(argc * sizeof(char*));
+        if (files == NULL) {
+            printError(strerror(errno));
+            return 1;
+        }
+
+        int index = 0;
+
+        for(int i = optind; i < argc; i++) {
+            files[index] = strdup(argv[i]);
+            index++;
+        }
+
         printErrors(errors, errorIndex);
         printFile(files, fileIndex);
         
-        for(int i = 0; i < *directoryIndex; i++) {
-            if((argc - optind) == 1) {
-                readDir(directories[i], options, 0);
-            } else {
-                readDir(directories[i], options, 1);
-            }   
+        if((argc - optind) == 1) {
+            readDir(files, options, 0);
+        } else {
+            readDir(files, options, 1);
         }
+
+        free(files);
     }
+
+    free(options);
+
+    return 0;
 }
 
 void
@@ -70,72 +96,81 @@ setOptions(int argc, char **argv, struct OPT *options) {
 }
 
 int
-readDir(char *pathname, struct OPT *options, int isDirnameRequired) {
-    DIR *dir;
-    struct dirent *content;
-    struct elements el = getDefaultStruct();
+readDir(char **files, struct OPT *options, int isDirnameRequired) {
+    FTS *fts;
+    FTSENT *ftsent;
+    int flags = FTS_NOCHDIR;
 
-    if((dir = opendir(pathname)) == NULL) {
-        return -1; 
+    if(options->listAllFlag) {
+        flags = flags | FTS_SEEDOT;
+    }
+    
+    if((fts = fts_open(files, flags, NULL)) == NULL) {
+        fprintf(stderr, "error: %s \n", strerror(errno));
+        return 1;
     }
 
-    if(isDirnameRequired)
-        printDirectory(pathname);
+    while ((ftsent = fts_read(fts)) != NULL)
+    {
+        struct elements el = getDefaultStruct();
 
-    while(content = readdir(dir)) {
-        if(strncmp(content->d_name, ".", 1)) {
-            el.name = content->d_name;
-            generateElement(pathname, &el, options);
-            printLine(el);
+        if(ftsent->fts_level == 0) {
+            if(ftsent->fts_info == FTS_DP)
+                continue;
+            printNewLine();
+            printDirectory(ftsent->fts_path);
+            continue;
         }
-        else {
-            if(strcmp(content->d_name, ".") == 0 || strcmp(content->d_name, "..") == 0) {
-                if(options->listAllFlag) {
-                    el.name = content->d_name;
-                    generateElement(pathname, &el, options);
-                    printLine(el);
+
+        if(ftsent->fts_info == FTS_DP || ftsent->fts_level > 1){
+            fts_set(fts, ftsent, FTS_SKIP);
+            continue;
+        }
+
+        int shouldPrint = 0;
+
+        if(options->listAllFlag) {
+            shouldPrint = 1;
+        } else {
+            if(strncmp(ftsent->fts_name, ".", 1)) {
+                shouldPrint = 1;
+            } else {
+                if(options->includeHiddenFiles) {
+                    shouldPrint = 1;
                 }
             }
-            else if(options->listAllFlag || options->includeHiddenFiles) {
-                el.name = content->d_name;
-                generateElement(pathname, &el, options);
-                printLine(el);
-            }
+        }
+        
+        if(shouldPrint) {
+            el.name = ftsent->fts_name;
+            generateElement(ftsent->fts_path, &el, options, ftsent);
+            printLine(el);
         }
     }
+    
+    
+    fts_close(fts);
 
-    printNewLine();
-
-    (void) closedir(dir);
-     
     return 0;
 }
 
 int
-generateElement(char *pathname, struct elements *el, struct OPT *options) {
+generateElement(char *path, struct elements *el, struct OPT *options, FTSENT *ftsent) {
     struct stat stats;
     struct passwd *userInfo;
     struct group *groupInfo;
-    int mutiplier = 1;
-    char *oldDirectory = NULL;
-
-    char *fullPath = malloc(strlen(pathname) + strlen(el->name) + 2);
-    fullPath[0] = '\0';
-    strcat(fullPath, pathname);
-    strcat(fullPath, "/");
-    strcat(fullPath, el->name);
-
-    if(lstat(fullPath, &stats) != 0) {
-        printf("what: %s \n", el->name);
-        printError(strerror(errno));
-        return 1;
-    }
+    char *permission = malloc(10);
 
     if(options->printInode) {
-        el->inode = &stats.st_ino;
+        el->inode = &(ftsent->fts_ino);
     }
 
     if(options->printStat) {
+        if(lstat(path, &stats) != 0) {
+            printError(strerror(errno));
+            return 1;
+        }
+        
         el->hardlinks = &stats.st_nlink;
         userInfo = getpwuid(stats.st_uid);
         el->owner = userInfo->pw_name;
@@ -145,7 +180,11 @@ generateElement(char *pathname, struct elements *el, struct OPT *options) {
         int hasSize = 1;
         el->hasSize = &hasSize;
         el->time = &stats.st_atime;
+        strmode(stats.st_mode, permission);
+        el->strmode = permission;
     }
+
+    free(permission);
 }
 
 void
@@ -161,6 +200,7 @@ allocateFileType(char *pathname, char *errors[], int *errorIndex, char *files[],
         strcat(error, strerror(errno));
         errors[*errorIndex] = error;
         (*errorIndex)++;
+        free(error);
         return;
     }
 

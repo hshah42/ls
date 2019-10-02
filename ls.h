@@ -1,5 +1,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <fts.h>
 #include <dirent.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -27,10 +28,9 @@ struct output
     struct elements el[];
 };
 
-int  readDir(char *pathname, struct OPT *options, int isDirnameRequired);
-void setOptions(int argc, char **argv, struct OPT *options);
+int readDir(char **files, struct OPT *options, int isDirnameRequired);void setOptions(int argc, char **argv, struct OPT *options);
 void initOptions(struct OPT *options);
 void allocateFileType(char *pathname, char *errors[], int *errorIndex, char *files[], 
                 int *fileIndex, char *directories[], int *directoryIndex);
-int generateElement(char *pathname, struct elements *el, struct OPT *options);
+int generateElement(char *pathname, struct elements *el, struct OPT *options, FTSENT *ftsent);
 int changeDirectory(char *pathname);
