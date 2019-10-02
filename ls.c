@@ -51,7 +51,7 @@ void
 setOptions(int argc, char **argv, struct OPT *options) {
     int opt;
 
-    while((opt = getopt(argc, argv, "Aail")) != -1) {
+    while((opt = getopt(argc, argv, "AailR")) != -1) {
         switch (opt) {
         case 'A':
             options->includeHiddenFiles = 1;
@@ -64,6 +64,9 @@ setOptions(int argc, char **argv, struct OPT *options) {
             break;
         case 'l':
             options->printStat = 1;
+            break;
+        case 'R':
+            options->recurse = 1;
             break;
         case '?':
             fprintf(stderr, "Invalid Parameter");
@@ -91,40 +94,49 @@ readDir(char **files, struct OPT *options, int isDirnameRequired) {
 
     while ((ftsent = fts_read(fts)) != NULL)
     {
-        struct elements el = getDefaultStruct();
+        int shouldPrintLine = 0;
 
-        if(ftsent->fts_level == 0) {
-            if(ftsent->fts_info == FTS_DP || !isDirnameRequired)
-                continue;
-            printNewLine();
-            printDirectory(ftsent->fts_path);
-            continue;
-        }
+        FTSENT* node = fts_children(fts, 0);
 
-        if(ftsent->fts_info == FTS_DP || ftsent->fts_level > 1){
-            fts_set(fts, ftsent, FTS_SKIP);
+        if(node == NULL)
             continue;
-        }
+
+        if(node->fts_level > 1 && !(options->recurse))
+            continue;
+        
+        printDirectory(node->fts_parent->fts_path);
 
         int shouldPrint = 0;
 
-        if(options->listAllFlag) {
-            shouldPrint = 1;
-        } else {
-            if(strncmp(ftsent->fts_name, ".", 1)) {
+        while (node != NULL)
+        {
+            shouldPrintLine = 1;
+
+            if(options->listAllFlag) {
                 shouldPrint = 1;
             } else {
-                if(options->includeHiddenFiles) {
+                if(strncmp(node->fts_name, ".", 1)) {
                     shouldPrint = 1;
+                } else {
+                    if(options->includeHiddenFiles) {
+                        shouldPrint = 1;
+                    }
                 }
             }
+
+            if(shouldPrint) {
+                struct elements el = getDefaultStruct();
+                el.name = node->fts_name;                
+                generateElement(node->fts_path, &el, options, node);
+                printLine(el);
+                shouldPrintLine = 1;
+            }
+
+            node = node->fts_link;
         }
-        
-        if(shouldPrint) {
-            el.name = ftsent->fts_name;
-            generateElement(ftsent->fts_path, &el, options, ftsent);
-            printLine(el);
-        }
+
+        if(shouldPrintLine)
+            fprintf(stdout, "\n");
     }
     
     

@@ -20,6 +20,7 @@ struct OPT
     int includeHiddenFiles;
     int printInode;
     int printStat;
+    int recurse;
 };
 
 struct output
