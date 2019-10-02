@@ -162,16 +162,16 @@ generateElement(char *path, struct elements *el, struct OPT *options, FTSENT *ft
             return 1;
         }
         
-        el->hardlinks = &stats.st_nlink;
-        userInfo = getpwuid(stats.st_uid);
+        el->hardlinks = &(ftsent->fts_statp->st_nlink);
+        userInfo = getpwuid(ftsent->fts_statp->st_uid);
         el->owner = userInfo->pw_name;
-        groupInfo = getgrgid(stats.st_gid);
+        groupInfo = getgrgid(ftsent->fts_statp->st_gid);
         el->group = groupInfo->gr_name;
-        el->size = &stats.st_size;
+        el->size = &(ftsent->fts_statp->st_size);
         int hasSize = 1;
         el->hasSize = &hasSize;
-        el->time = &stats.st_atime;
-        strmode(stats.st_mode, permission);
+        el->time = &(ftsent->fts_statp->st_atime);
+        strmode(ftsent->fts_statp->st_mode, permission);
         el->strmode = strdup(permission);
     }
 
