@@ -94,7 +94,7 @@ readDir(char **files, struct OPT *options, int isDirnameRequired) {
         return 1;
     }
 
-    performLs(fts, ftsent, options);    
+    performLs(fts, ftsent, options, isDirnameRequired);    
     
     fts_close(fts);
 
@@ -102,13 +102,12 @@ readDir(char **files, struct OPT *options, int isDirnameRequired) {
 }
 
 int
-performLs(FTS *fts, FTSENT *ftsent, struct OPT *options) {
+performLs(FTS *fts, FTSENT *ftsent, struct OPT *options, int isDirnameRequired) {
     int falseInit = 0;
     int *shouldPrintContent = &falseInit;
     struct maxsize max;
 
     while ((ftsent = fts_read(fts)) != NULL) {
-        int shouldPrintLine = 0;
         FTSENT* node = fts_children(fts, 0);
 
         if (ftsent->fts_level > 1 && !(options->recurse)) {
@@ -124,8 +123,10 @@ performLs(FTS *fts, FTSENT *ftsent, struct OPT *options) {
             continue;
         }
         
-        if (*shouldPrintContent)
+        if (*shouldPrintContent && isDirnameRequired) {
+            printNewLine();
             printDirectory(node->fts_parent->fts_path);
+        }
         else
             max = getDefaultMaxSizeStruct();
         
@@ -133,15 +134,12 @@ performLs(FTS *fts, FTSENT *ftsent, struct OPT *options) {
 
         while (node != NULL)
         {
-            shouldPrintLine = 1;
-
             if (*shouldPrintContent) {
                 if(shouldPrint(options, node)) {
                     struct elements el = getDefaultStruct();
                     el.name = node->fts_name;                
                     generateElement(node->fts_path, &el, options, node);
                     printLine(el, max);
-                    shouldPrintLine = 1;
                 }
             } else {
                 if (shouldPrint(options, node)) {
@@ -154,7 +152,7 @@ performLs(FTS *fts, FTSENT *ftsent, struct OPT *options) {
             node = node->fts_link;
         }
 
-        postChildTraversal(shouldPrintContent, shouldPrintLine, fts, directory);
+        postChildTraversal(shouldPrintContent, fts, directory);
         
     }
 
@@ -210,7 +208,7 @@ generateMaxSizeStruct(FTSENT *node, struct maxsize max) {
 }
 
 int
-postChildTraversal(int *shouldPrintContent, int shouldPrintLine, FTS *fts, FTSENT *directory) {
+postChildTraversal(int *shouldPrintContent, FTS *fts, FTSENT *directory) {
     if (!(*shouldPrintContent))
         fts_set(fts, directory, FTS_AGAIN);
 
@@ -219,9 +217,6 @@ postChildTraversal(int *shouldPrintContent, int shouldPrintLine, FTS *fts, FTSEN
     } else {
         *shouldPrintContent = 1;
     }
-    
-    if (shouldPrintLine)
-        fprintf(stdout, "\n");
 }
 
 int
@@ -261,30 +256,42 @@ generateElement(char *path, struct elements *el, struct OPT *options, FTSENT *ft
         el->hardlinks = &(ftsent->fts_statp->st_nlink);
         if ((userInfo = getpwuid(ftsent->fts_statp->st_uid)) == NULL) {
             int size = getNumberOfDigits(ftsent->fts_statp->st_uid);
-            char owner[size];
+            char *owner = malloc(size + 1);
+            if(owner == NULL) {
+                printError(strerror(errno));
+                return 1;
+            }
             sprintf(owner, "%d", ftsent->fts_statp->st_uid);
-            el->owner = owner;
+            el->owner = strdup(owner);
+            free(owner);
         } else {
             el->owner = userInfo->pw_name;
         }
         
         if ((groupInfo = getgrgid(ftsent->fts_statp->st_gid)) == NULL) {
             int size = getNumberOfDigits(ftsent->fts_statp->st_gid);
-            char group[size];
+            char *group = malloc(size + 1);
+            if(group == NULL) {
+                printError(strerror(errno));
+                return 1;
+            }
             sprintf(group, "%d", ftsent->fts_statp->st_gid);
-            el->owner = group;
+            el->group = strdup(group);
+            free(group);
         } else {
             el->group = groupInfo->gr_name;
         }
         el->size = &(ftsent->fts_statp->st_size);
         int hasSize = 1;
         el->hasSize = &hasSize;
-        el->time = &(ftsent->fts_statp->st_atime);
+        el->time = &(ftsent->fts_statp->st_mtimespec.tv_sec);
         strmode(ftsent->fts_statp->st_mode, permission);
         el->strmode = strdup(permission);
     }
 
     free(permission);
+
+    return 0;
 }
 
 int
