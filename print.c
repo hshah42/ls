@@ -71,6 +71,20 @@ getDefaultStruct() {
     return el;
 }
 
+struct maxsize
+getDefaultMaxSizeStruct() {
+    struct maxsize max;
+
+    max.name = 0;
+    max.inode = 0;
+    max.hardlinks = 0;
+    max.owner = 0;
+    max.group = 0;
+    max.size = 0;
+    
+    return max;
+}
+
 void
 printFile(char **files, int *fileCount) {
     int addLine = 0;

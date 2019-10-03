@@ -105,29 +105,32 @@ int
 performLs(FTS *fts, FTSENT *ftsent, struct OPT *options) {
     int falseInit = 0;
     int *shouldPrintContent = &falseInit;
+    struct maxsize max;
 
     while ((ftsent = fts_read(fts)) != NULL) {
         int shouldPrintLine = 0;
         FTSENT* node = fts_children(fts, 0);
 
-        if(node == NULL) {
+        if (node == NULL) {
             continue;
         }
             
-        if(node->fts_level > 1 && !(options->recurse)) {
+        if (node->fts_level > 1 && !(options->recurse)) {
             break;
         }
         
-        if(*shouldPrintContent)
+        if (*shouldPrintContent)
             printDirectory(node->fts_parent->fts_path);
-
+        else
+            max = getDefaultMaxSizeStruct();
+        
         FTSENT* directory = node->fts_parent;
 
         while (node != NULL)
         {
             shouldPrintLine = 1;
 
-            if(*shouldPrintContent) {
+            if (*shouldPrintContent) {
                 if(shouldPrint(options, node)) {
                     struct elements el = getDefaultStruct();
                     el.name = node->fts_name;                
@@ -138,27 +141,90 @@ performLs(FTS *fts, FTSENT *ftsent, struct OPT *options) {
                     fts_set(fts, directory, FTS_SKIP);
                 }
             } else {
-                if(shouldPrint(options, node))
-                    printf("check size \n");
+                if (shouldPrint(options, node)) {
+                   max = generateMaxSizeStruct(node, max);
+                }
             }
 
             node = node->fts_link;
         }
 
-        if(!(*shouldPrintContent))
-            fts_set(fts, directory, FTS_AGAIN);
-
-        if(*shouldPrintContent) {
-            *shouldPrintContent = 0;
-        } else {
-            *shouldPrintContent = 1;
-        }
-
-        if(shouldPrintLine)
-            fprintf(stdout, "\n");
+        postChildTraversal(shouldPrintContent, shouldPrintLine, fts, directory);
+        
     }
 
     return 0;
+}
+
+struct maxsize
+generateMaxSizeStruct(FTSENT *node, struct maxsize max) {
+    struct passwd *userInfo;
+    struct group *groupInfo;
+
+    if (node->fts_namelen > max.name) {
+        max.name = node->fts_namelen;
+    }
+
+    if((userInfo = getpwuid(node->fts_statp->st_uid)) == NULL) {
+        printError(strerror(errno));
+    }
+
+    if((groupInfo = getgrgid(node->fts_statp->st_gid)) == NULL) {
+        printError(strerror(errno));
+    }
+
+    if(strlen(userInfo->pw_name) > max.owner) {
+        max.owner = strlen(userInfo->pw_name);
+    }
+
+    if(strlen(groupInfo->gr_name) > max.group) {
+        max.group = strlen(groupInfo->gr_name);
+    }
+
+    long inode = node->fts_statp->st_ino;
+    long size = node->fts_statp->st_size;
+    long hardlinks = node->fts_statp->st_nlink;
+
+    if (getNumberOfDigits(inode) > max.inode) {
+        max.inode = getNumberOfDigits(inode);
+    }
+
+    if (getNumberOfDigits(size) > max.size) {
+        max.size = getNumberOfDigits(size);
+    }
+
+    if (getNumberOfDigits(hardlinks) > max.hardlinks) {
+        max.hardlinks = getNumberOfDigits(hardlinks);
+    }
+
+    return max;
+}
+
+long
+getNumberOfDigits(long number) {
+    long count = 0;
+
+    while(number != 0) {
+        number = number / 10;
+        count++;
+    }
+
+    return count;
+}
+
+int
+postChildTraversal(int *shouldPrintContent, int shouldPrintLine, FTS *fts, FTSENT *directory) {
+    if (!(*shouldPrintContent))
+        fts_set(fts, directory, FTS_AGAIN);
+
+    if (*shouldPrintContent) {
+        *shouldPrintContent = 0;
+    } else {
+        *shouldPrintContent = 1;
+    }
+    
+    if (shouldPrintLine)
+        fprintf(stdout, "\n");
 }
 
 int
@@ -186,7 +252,7 @@ generateElement(char *path, struct elements *el, struct OPT *options, FTSENT *ft
     char *permission = malloc(10);
 
     if(options->printInode) {
-        el->inode = &(ftsent->fts_ino);
+        el->inode = &(ftsent->fts_statp->st_ino);
     }
 
     if(options->printStat) {
