@@ -31,7 +31,8 @@ struct output
 
 int readDir(char **files, struct OPT *options, int isDirnameRequired);void setOptions(int argc, char **argv, struct OPT *options);
 void initOptions(struct OPT *options);
-void allocateFile(int maxSize, int argc, char **argv, char **files);
+int allocateFile(int maxSize, int argc, char **argv, char **files);
 int generateElement(char *pathname, struct elements *el, struct OPT *options, FTSENT *ftsent);
 int changeDirectory(char *pathname);
 int performLs(FTS *fts, FTSENT *ftsent, struct OPT *options);
+int shouldPrint(struct OPT *options, FTSENT *node);

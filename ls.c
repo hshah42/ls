@@ -31,12 +31,14 @@ main(int argc, char **argv) {
             return 1;
         }
 
-        allocateFile(maxSize, argc, argv, directories);
+        int dirSize = allocateFile(maxSize, argc, argv, directories);
         
-        if((argc - optind) == 1) {
-            readDir(directories, options, 0);
-        } else {
-            readDir(directories, options, 1);
+        if (dirSize > 0) {
+            if((argc - optind) == 1) {
+                readDir(directories, options, 0);
+            } else {
+                readDir(directories, options, 1);
+            }
         }
 
         free(directories);
@@ -101,9 +103,11 @@ readDir(char **files, struct OPT *options, int isDirnameRequired) {
 
 int
 performLs(FTS *fts, FTSENT *ftsent, struct OPT *options) {
+    int falseInit = 0;
+    int *shouldPrintContent = &falseInit;
+
     while ((ftsent = fts_read(fts)) != NULL) {
         int shouldPrintLine = 0;
-
         FTSENT* node = fts_children(fts, 0);
 
         if(node == NULL) {
@@ -114,38 +118,61 @@ performLs(FTS *fts, FTSENT *ftsent, struct OPT *options) {
             break;
         }
         
-        printDirectory(node->fts_parent->fts_path);
+        if(*shouldPrintContent)
+            printDirectory(node->fts_parent->fts_path);
+
+        FTSENT* directory = node->fts_parent;
 
         while (node != NULL)
         {
-            int shouldPrint = 0;
             shouldPrintLine = 1;
 
-            if(options->listAllFlag) {
-                shouldPrint = 1;
-            } else {
-                if(strncmp(node->fts_name, ".", 1)) {
-                    shouldPrint = 1;
+            if(*shouldPrintContent) {
+                if(shouldPrint(options, node)) {
+                    struct elements el = getDefaultStruct();
+                    el.name = node->fts_name;                
+                    generateElement(node->fts_path, &el, options, node);
+                    printLine(el);
+                    shouldPrintLine = 1;
                 } else {
-                    if(options->includeHiddenFiles) {
-                        shouldPrint = 1;
-                    }
+                    fts_set(fts, directory, FTS_SKIP);
                 }
-            }
-
-            if(shouldPrint) {
-                struct elements el = getDefaultStruct();
-                el.name = node->fts_name;                
-                generateElement(node->fts_path, &el, options, node);
-                printLine(el);
-                shouldPrintLine = 1;
+            } else {
+                if(shouldPrint(options, node))
+                    printf("check size \n");
             }
 
             node = node->fts_link;
         }
 
+        if(!(*shouldPrintContent))
+            fts_set(fts, directory, FTS_AGAIN);
+
+        if(*shouldPrintContent) {
+            *shouldPrintContent = 0;
+        } else {
+            *shouldPrintContent = 1;
+        }
+
         if(shouldPrintLine)
             fprintf(stdout, "\n");
+    }
+
+    return 0;
+}
+
+int
+shouldPrint(struct OPT *options, FTSENT *node) {
+    if(options->listAllFlag) {
+        return 1;
+    } else {
+        if(strncmp(node->fts_name, ".", 1)) {
+            return 1;
+        } else {
+            if(options->includeHiddenFiles) {
+                return 1;
+            }
+        }
     }
 
     return 0;
@@ -184,7 +211,7 @@ generateElement(char *path, struct elements *el, struct OPT *options, FTSENT *ft
     free(permission);
 }
 
-void
+int
 allocateFile(int maxSize, int argc, char **argv, char **directories) {
     int initialErrorIndex=0, initialFileIndex=0, initialDirectoryIndex = 0;
     
@@ -221,4 +248,6 @@ allocateFile(int maxSize, int argc, char **argv, char **directories) {
 
     printErrors(errors, errorIndex);
     printFile(files, fileIndex);
+
+    return index;
 }

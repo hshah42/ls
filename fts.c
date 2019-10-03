@@ -8,6 +8,7 @@
 #include <stdlib.h>
 
 int compareSize(const FTSENT **fileOne, const FTSENT **fileTwo);
+void file_ls(FTS* file_system, int* flags, int *shouldRepeat);
 
 int
 main(int argc, char **argv) {
@@ -27,6 +28,9 @@ main(int argc, char **argv) {
         return 1;
     }
 
+    int false = 0;
+    int *shouldPrint = &false;
+
     while ((ftsent = fts_read(fts)) != NULL)
     {
         if(ftsent->fts_level == 0) {
@@ -37,18 +41,65 @@ main(int argc, char **argv) {
             continue;
         }
 
-        if(ftsent->fts_info == FTS_DP || ftsent->fts_level > 1){
+        if(ftsent->fts_info == FTS_DP){
             fts_set(fts, ftsent, FTS_SKIP);
             continue;
         }
-        
-        fprintf(stdout, "%lld %s %s \n", ftsent->fts_statp->st_size,ftsent->fts_path, ftsent->fts_name);
+
+        file_ls(fts, 0, shouldPrint);
+        //fprintf(stdout, "innnnnn %lld %s\n", ftsent->fts_statp->st_size,ftsent->fts_name);
     }
     
     
     fts_close(fts);
 
     return 0;
+}
+
+void file_ls(FTS* file_system, int* flags, int *shouldPrint)
+{
+    FTSENT* node = fts_children(file_system, 0);
+
+    if (errno != 0) {
+         perror("fts_children");
+    }
+       
+    int shouldPrintLine = 0;
+
+    if(node == NULL)
+        return;
+
+    if(node != NULL && *shouldPrint) {
+        fprintf(stdout, "%s: \n", node->fts_parent->fts_path);
+    }
+    
+    FTSENT* directory = node->fts_parent;
+    
+    while (node != NULL)
+    {
+        // TODO use file_name and flags
+        //printf("%d %d \n", node->fts_info, FTS_D);
+        if(*shouldPrint)
+            printf("%s %s\n", node->fts_path, node->fts_name);
+        else
+            printf("get size \n");
+        
+        node = node->fts_link;
+        shouldPrintLine = 1;
+    }
+
+    if(!(*shouldPrint))
+        fts_set(file_system, directory, FTS_AGAIN);
+
+    if(*shouldPrint) {
+        *shouldPrint = 0;
+    } else {
+        *shouldPrint = 1;
+    }
+
+    if(shouldPrintLine)
+        fprintf(stdout, "\n");
+
 }
 
 int 
