@@ -3,10 +3,12 @@
 const char *monthNames[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
 void
-printLine(struct elements el) {
+printLine(struct elements el, struct maxsize max) {
     struct tm *temp;
 
     if(el.inode > 0) {
+        long whitespaces = max.inode - getNumberOfDigits(*el.inode);
+        addWhiteSpaces(whitespaces);
         fprintf(stdout, "%llu ", *el.inode);
     }
     
@@ -15,28 +17,45 @@ printLine(struct elements el) {
     }
 
     if(el.hardlinks > 0) {
+        long whitespaces = max.hardlinks - getNumberOfDigits(*el.hardlinks);
+        addWhiteSpaces(whitespaces);
         fprintf(stdout, "%hu ", *el.hardlinks);
     }
 
     if(el.owner != NULL) {
-        fprintf(stdout, "%s ", el.owner);
+        long whitespaces = max.owner - strlen(el.owner);
+        fprintf(stdout, "%s  ", el.owner);
+        addWhiteSpaces(whitespaces);
     }
 
     if(el.group != NULL) {
-        fprintf(stdout, "%s ", el.group);
+        long whitespaces = max.owner - strlen(el.group);
+        fprintf(stdout, "%s  ", el.group);
+        addWhiteSpaces(whitespaces);
     }
 
     if(el.size >= 0 && *(el.hasSize)) {
+        long whitespaces = max.size - getNumberOfDigits(*el.size);
+        addWhiteSpaces(whitespaces);
         fprintf(stdout, "%lld ", *el.size);
     }
 
     if(el.time > 0) {
         temp = localtime(el.time);
-        fprintf(stdout, "%s %d %d:%d ", monthNames[temp->tm_mon], temp->tm_mday, temp->tm_hour, temp->tm_min);
+        fprintf(stdout, "%s ", monthNames[temp->tm_mon]);
+        long whitespaces = 2 - getNumberOfDigits(temp->tm_mday);
+        addWhiteSpaces(whitespaces);
+        fprintf(stdout, "%d ", temp->tm_mday);
+        whitespaces = 2 - getNumberOfDigits(temp->tm_hour);
+        addWhiteSpaces(whitespaces);
+        fprintf(stdout, "%d:", temp->tm_hour);
+        fprintf(stdout, "%d ", temp->tm_min);
     }
 
     if(el.name != NULL) {
+        int whitespaces = max.name - strlen(el.name);
         fprintf(stdout, "%s ", el.name);
+        addWhiteSpaces(whitespaces);
     }
 
     fprintf(stdout, "\n");
@@ -113,11 +132,25 @@ printNewLine() {
     fprintf(stdout, "\n");
 }
 
-void 
-print(char *directoryName, struct elements el[], int elementsCount) {
-    fprintf(stdout, "%s: \n", directoryName);
- 
-    for(int i = 0; i < elementsCount; i++) {
-        printLine(el[i]);
+void
+addWhiteSpaces(long number) {
+    for(int i = 0; i < number; i++) {
+        fprintf(stdout, " ");
     }
+}
+
+long
+getNumberOfDigits(long number) {
+    if(number == 0) {
+        return 1;
+    }
+
+    long count = 0;
+
+    while(number != 0) {
+        number = number / 10;
+        count++;
+    }
+
+    return count;
 }

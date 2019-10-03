@@ -1,6 +1,7 @@
 #include <sys/stat.h>
 #include <stdio.h>
 #include <time.h>
+#include <string.h>
 
 struct elements {
     char     *name;
@@ -26,9 +27,8 @@ struct maxsize
 };
 
 
-void printLine(struct elements el);
+void printLine(struct elements el, struct maxsize max);
 struct elements getDefaultStruct();
-void print(char *directoryName, struct elements el[], int elementsCount);
 void printFile(char **files, int *fileCount);
 void printErrors(char **errors, int *errorCount);
 void printError(char *error);
@@ -36,3 +36,5 @@ void printDirectory(char *directoryName);
 void printNewLine();
 void addToLine(struct elements el);
 struct maxsize getDefaultMaxSizeStruct();
+long getNumberOfDigits(long number);
+void addWhiteSpaces(long number);

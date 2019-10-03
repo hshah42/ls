@@ -111,12 +111,17 @@ performLs(FTS *fts, FTSENT *ftsent, struct OPT *options) {
         int shouldPrintLine = 0;
         FTSENT* node = fts_children(fts, 0);
 
+        if (ftsent->fts_level > 1 && !(options->recurse)) {
+            fts_set(fts, ftsent, FTS_SKIP);
+            continue;
+        }
+
         if (node == NULL) {
             continue;
         }
             
         if (node->fts_level > 1 && !(options->recurse)) {
-            break;
+            continue;
         }
         
         if (*shouldPrintContent)
@@ -135,14 +140,14 @@ performLs(FTS *fts, FTSENT *ftsent, struct OPT *options) {
                     struct elements el = getDefaultStruct();
                     el.name = node->fts_name;                
                     generateElement(node->fts_path, &el, options, node);
-                    printLine(el);
+                    printLine(el, max);
                     shouldPrintLine = 1;
-                } else {
-                    fts_set(fts, directory, FTS_SKIP);
                 }
             } else {
                 if (shouldPrint(options, node)) {
                    max = generateMaxSizeStruct(node, max);
+                } else {
+                    fts_set(fts, node, FTS_SKIP);
                 }
             }
 
@@ -166,19 +171,23 @@ generateMaxSizeStruct(FTSENT *node, struct maxsize max) {
     }
 
     if((userInfo = getpwuid(node->fts_statp->st_uid)) == NULL) {
-        printError(strerror(errno));
+        if (getNumberOfDigits(node->fts_statp->st_uid) > max.owner) {
+            max.owner = getNumberOfDigits(node->fts_statp->st_uid);
+        }
+    } else {
+        if(strlen(userInfo->pw_name) > max.owner) {
+            max.owner = strlen(userInfo->pw_name);
+        }
     }
 
     if((groupInfo = getgrgid(node->fts_statp->st_gid)) == NULL) {
-        printError(strerror(errno));
-    }
-
-    if(strlen(userInfo->pw_name) > max.owner) {
-        max.owner = strlen(userInfo->pw_name);
-    }
-
-    if(strlen(groupInfo->gr_name) > max.group) {
-        max.group = strlen(groupInfo->gr_name);
+        if (getNumberOfDigits(node->fts_statp->st_gid) > max.group) {
+            max.owner = getNumberOfDigits(node->fts_statp->st_gid);
+        }
+    } else {
+        if(strlen(groupInfo->gr_name) > max.group) {
+            max.group = strlen(groupInfo->gr_name);
+        }
     }
 
     long inode = node->fts_statp->st_ino;
@@ -198,18 +207,6 @@ generateMaxSizeStruct(FTSENT *node, struct maxsize max) {
     }
 
     return max;
-}
-
-long
-getNumberOfDigits(long number) {
-    long count = 0;
-
-    while(number != 0) {
-        number = number / 10;
-        count++;
-    }
-
-    return count;
 }
 
 int
@@ -251,21 +248,34 @@ generateElement(char *path, struct elements *el, struct OPT *options, FTSENT *ft
     struct group *groupInfo;
     char *permission = malloc(10);
 
-    if(options->printInode) {
+    if (options->printInode) {
         el->inode = &(ftsent->fts_statp->st_ino);
     }
 
-    if(options->printStat) {
+    if (options->printStat) {
         if(lstat(path, &stats) != 0) {
             printError(strerror(errno));
             return 1;
         }
         
         el->hardlinks = &(ftsent->fts_statp->st_nlink);
-        userInfo = getpwuid(ftsent->fts_statp->st_uid);
-        el->owner = userInfo->pw_name;
-        groupInfo = getgrgid(ftsent->fts_statp->st_gid);
-        el->group = groupInfo->gr_name;
+        if ((userInfo = getpwuid(ftsent->fts_statp->st_uid)) == NULL) {
+            int size = getNumberOfDigits(ftsent->fts_statp->st_uid);
+            char owner[size];
+            sprintf(owner, "%d", ftsent->fts_statp->st_uid);
+            el->owner = owner;
+        } else {
+            el->owner = userInfo->pw_name;
+        }
+        
+        if ((groupInfo = getgrgid(ftsent->fts_statp->st_gid)) == NULL) {
+            int size = getNumberOfDigits(ftsent->fts_statp->st_gid);
+            char group[size];
+            sprintf(group, "%d", ftsent->fts_statp->st_gid);
+            el->owner = group;
+        } else {
+            el->group = groupInfo->gr_name;
+        }
         el->size = &(ftsent->fts_statp->st_size);
         int hasSize = 1;
         el->hasSize = &hasSize;

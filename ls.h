@@ -39,4 +39,3 @@ int performLs(FTS *fts, FTSENT *ftsent, struct OPT *options);
 int shouldPrint(struct OPT *options, FTSENT *node);
 int postChildTraversal(int *shouldPrintContent, int shouldPrintLine, FTS *fts, FTSENT *directory);
 struct maxsize generateMaxSizeStruct(FTSENT *node, struct maxsize max);
-long getNumberOfDigits(long number);

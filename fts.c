@@ -79,6 +79,8 @@ void file_ls(FTS* file_system, int* flags, int *shouldPrint)
     {
         // TODO use file_name and flags
         //printf("%d %d \n", node->fts_info, FTS_D);
+        long a = node->fts_statp->st_size;
+        printf("%d \n", a);
         if(*shouldPrint)
             printf("%s %s\n", node->fts_path, node->fts_name);
         else
