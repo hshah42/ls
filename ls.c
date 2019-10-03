@@ -92,24 +92,33 @@ readDir(char **files, struct OPT *options, int isDirnameRequired) {
         return 1;
     }
 
-    while ((ftsent = fts_read(fts)) != NULL)
-    {
+    performLs(fts, ftsent, options);    
+    
+    fts_close(fts);
+
+    return 0;
+}
+
+int
+performLs(FTS *fts, FTSENT *ftsent, struct OPT *options) {
+    while ((ftsent = fts_read(fts)) != NULL) {
         int shouldPrintLine = 0;
 
         FTSENT* node = fts_children(fts, 0);
 
-        if(node == NULL)
+        if(node == NULL) {
             continue;
-
-        if(node->fts_level > 1 && !(options->recurse))
-            continue;
+        }
+            
+        if(node->fts_level > 1 && !(options->recurse)) {
+            break;
+        }
         
         printDirectory(node->fts_parent->fts_path);
 
-        int shouldPrint = 0;
-
         while (node != NULL)
         {
+            int shouldPrint = 0;
             shouldPrintLine = 1;
 
             if(options->listAllFlag) {
@@ -138,9 +147,6 @@ readDir(char **files, struct OPT *options, int isDirnameRequired) {
         if(shouldPrintLine)
             fprintf(stdout, "\n");
     }
-    
-    
-    fts_close(fts);
 
     return 0;
 }
