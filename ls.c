@@ -18,9 +18,10 @@ main(int argc, char **argv) {
     int maxSize = argc - optind; 
 
     if(optind == argc) {
-        char *dir[1];
-        dir[0] = ".";
+        char **dir = malloc(2);
+        dir[0] = "./";
         readDir(dir, options, 0);
+        free(dir);
     }
     else
     {
@@ -83,7 +84,7 @@ int
 readDir(char **files, struct OPT *options, int isDirnameRequired) {
     FTS *fts;
     FTSENT *ftsent;
-    int flags = FTS_NOCHDIR;
+    int flags = FTS_NOCHDIR | FTS_PHYSICAL;
 
     if(options->listAllFlag) {
         flags = flags | FTS_SEEDOT;
@@ -123,9 +124,11 @@ performLs(FTS *fts, FTSENT *ftsent, struct OPT *options, int isDirnameRequired) 
             continue;
         }
         
-        if (*shouldPrintContent && isDirnameRequired) {
-            printNewLine();
-            printDirectory(node->fts_parent->fts_path);
+        if (*shouldPrintContent) {
+            if(isDirnameRequired || options->recurse) {
+                printNewLine();
+                printDirectory(node->fts_parent->fts_path);
+            }
         }
         else
             max = getDefaultMaxSizeStruct();
@@ -137,13 +140,22 @@ performLs(FTS *fts, FTSENT *ftsent, struct OPT *options, int isDirnameRequired) 
             if (*shouldPrintContent) {
                 if(shouldPrint(options, node)) {
                     struct elements el = getDefaultStruct();
-                    el.name = node->fts_name;                
+                    
+                    if(S_ISLNK(node->fts_statp->st_mode)) {
+                        if (addLinkName(node, &el) != 0) {
+                            printError(strerror(errno));
+                            break;
+                        }
+                    } else {
+                        el.name = node->fts_name; 
+                    }               
+                    
                     generateElement(node->fts_path, &el, options, node);
                     printLine(el, max);
                 }
             } else {
                 if (shouldPrint(options, node)) {
-                   max = generateMaxSizeStruct(node, max);
+                   max = generateMaxSizeStruct(node, max); 
                 } else {
                     fts_set(fts, node, FTS_SKIP);
                 }
@@ -159,6 +171,28 @@ performLs(FTS *fts, FTSENT *ftsent, struct OPT *options, int isDirnameRequired) 
     return 0;
 }
 
+int
+addLinkName(FTSENT *node, struct elements *el) {
+    char linkname[PATH_MAX];
+    char pathname[node->fts_namelen + node->fts_pathlen + 1];
+    strcat(pathname, node->fts_path);
+    strcat(pathname, node->fts_name);
+    ssize_t len;
+
+    if ((len = readlink(pathname, linkname, sizeof(linkname) - 1)) == -1) {
+        printError(strerror(errno));
+        return 1;
+    }
+
+    linkname[len] = '\0';
+    char fullLink[strlen(linkname) + strlen(node->fts_name) + 1];
+    strcat(fullLink, node->fts_name);
+    strcat(fullLink, " -> ");
+    strcat(fullLink, linkname);
+    el->name = strdup(fullLink);
+    return 0;
+}
+
 struct maxsize
 generateMaxSizeStruct(FTSENT *node, struct maxsize max) {
     struct passwd *userInfo;
@@ -168,7 +202,7 @@ generateMaxSizeStruct(FTSENT *node, struct maxsize max) {
         max.name = node->fts_namelen;
     }
 
-    if((userInfo = getpwuid(node->fts_statp->st_uid)) == NULL) {
+    if ((userInfo = getpwuid(node->fts_statp->st_uid)) == NULL) {
         if (getNumberOfDigits(node->fts_statp->st_uid) > max.owner) {
             max.owner = getNumberOfDigits(node->fts_statp->st_uid);
         }
@@ -178,12 +212,12 @@ generateMaxSizeStruct(FTSENT *node, struct maxsize max) {
         }
     }
 
-    if((groupInfo = getgrgid(node->fts_statp->st_gid)) == NULL) {
+    if ((groupInfo = getgrgid(node->fts_statp->st_gid)) == NULL) {
         if (getNumberOfDigits(node->fts_statp->st_gid) > max.group) {
             max.owner = getNumberOfDigits(node->fts_statp->st_gid);
         }
     } else {
-        if(strlen(groupInfo->gr_name) > max.group) {
+        if (strlen(groupInfo->gr_name) > max.group) {
             max.group = strlen(groupInfo->gr_name);
         }
     }

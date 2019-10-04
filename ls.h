@@ -39,3 +39,4 @@ int performLs(FTS *fts, FTSENT *ftsent, struct OPT *options, int isDirnameRequir
 int shouldPrint(struct OPT *options, FTSENT *node);
 int postChildTraversal(int *shouldPrintContent, FTS *fts, FTSENT *directory);
 struct maxsize generateMaxSizeStruct(FTSENT *node, struct maxsize max);
+int addLinkName(FTSENT *node, struct elements *el);

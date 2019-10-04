@@ -118,7 +118,7 @@ printFile(char **files, int *fileCount) {
 void
 printDirectory(char *directoryName) {
     fprintf(stdout, "%s: \n", directoryName);
-}
+} 
 
 void 
 printErrors(char **errors, int *errorCount) {
