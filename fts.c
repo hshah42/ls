@@ -33,18 +33,18 @@ main(int argc, char **argv) {
 
     while ((ftsent = fts_read(fts)) != NULL)
     {
-        if(ftsent->fts_level == 0) {
-            if(ftsent->fts_info == FTS_DP)
-                continue;
-            printf("\n");
-            fprintf(stdout, "%s:\n", ftsent->fts_path);
-            continue;
-        }
+        // if(ftsent->fts_level == 0) {
+        //     if(ftsent->fts_info == FTS_DP)
+        //         continue;
+        //     printf("\n");
+        //     fprintf(stdout, "%s:\n", ftsent->fts_path);
+        //     continue;
+        // }
 
-        if(ftsent->fts_info == FTS_DP){
-            fts_set(fts, ftsent, FTS_SKIP);
-            continue;
-        }
+        // if(ftsent->fts_info == FTS_DP){
+        //     fts_set(fts, ftsent, FTS_SKIP);
+        //     continue;
+        // }
 
         file_ls(fts, 0, shouldPrint);
         //fprintf(stdout, "innnnnn %lld %s\n", ftsent->fts_statp->st_size,ftsent->fts_name);
@@ -69,9 +69,9 @@ void file_ls(FTS* file_system, int* flags, int *shouldPrint)
     if(node == NULL)
         return;
 
-    if(node != NULL && *shouldPrint) {
-        fprintf(stdout, "%s: \n", node->fts_parent->fts_path);
-    }
+    // if(node != NULL && *shouldPrint) {
+    //     fprintf(stdout, "%s: \n", node->fts_parent->fts_path);
+    // }
     
     FTSENT* directory = node->fts_parent;
     
@@ -79,8 +79,8 @@ void file_ls(FTS* file_system, int* flags, int *shouldPrint)
     {
         // TODO use file_name and flags
         //printf("%d %d \n", node->fts_info, FTS_D);
-        long a = node->fts_statp->st_size;
-        printf("%d \n", a);
+        // long a = node->fts_statp->st_size;
+        // printf("%d \n", a);
         if(*shouldPrint)
             printf("%s %s\n", node->fts_path, node->fts_name);
         else

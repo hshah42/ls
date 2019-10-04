@@ -1,5 +1,11 @@
 #include "ls.h"
 
+/**
+ * Entry point of the program. Takes 2 arguments
+ * 
+ * argc: number of args passed in argv
+ * argv: arguments passed to the program 
+ **/
 int
 main(int argc, char **argv) {
     (void) setprogname(argv[0]);
@@ -50,6 +56,12 @@ main(int argc, char **argv) {
     return 0;
 }
 
+/**
+ * setOptions takes in the arguments passed an gets the
+ * optional parameters set by the user to enable flags that indicate
+ * the flow of the program.
+ * 
+ **/
 void
 setOptions(int argc, char **argv, struct OPT *options) {
     int opt;
@@ -80,6 +92,13 @@ setOptions(int argc, char **argv, struct OPT *options) {
     }
 }
 
+/**
+ * Reading the directory specified in the arguments
+ * This method will call the subsiquent methods that print the
+ * directories depending on the optional parameters passed by the
+ * user.
+ * 
+ **/
 int
 readDir(char **files, struct OPT *options, int isDirnameRequired) {
     FTS *fts;
@@ -102,9 +121,28 @@ readDir(char **files, struct OPT *options, int isDirnameRequired) {
     return 0;
 }
 
+/**
+ * This function will perform traversing of the directories that are
+ * passed in the arguments.
+ * 
+ * It will recursively iterate through the file system in a depth first way whenever 
+ * it encounters a directory.
+ * 
+ * It will call fts_children on every directory encountered. fts_children was used
+ * because fts read goes depth first and we would like to print the content of the 
+ * directories before we move forward. fts_children helps us in achieving those
+ * results.
+ * 
+ * We plus repeat iteration on the directory. During the first iteration we get all
+ * max values from the directory in order to have pretty print. In the second iteration
+ * we actually print the values, adding whitespaces where necessary based on the max 
+ * values we gathered during the previous iteration of the same directory.
+ **/
 int
 performLs(FTS *fts, FTSENT *ftsent, struct OPT *options, int isDirnameRequired) {
     int falseInit = 0;
+    // This variable determines when to print the contents and
+    // when to get the max values for printing.
     int *shouldPrintContent = &falseInit;
     struct maxsize max;
 
@@ -141,7 +179,7 @@ performLs(FTS *fts, FTSENT *ftsent, struct OPT *options, int isDirnameRequired) 
                 if(shouldPrint(options, node)) {
                     struct elements el = getDefaultStruct();
                     
-                    if(S_ISLNK(node->fts_statp->st_mode)) {
+                    if(S_ISLNK(node->fts_statp->st_mode) && options->printStat) {
                         if (addLinkName(node, &el) != 0) {
                             printError(strerror(errno));
                             break;
@@ -171,6 +209,11 @@ performLs(FTS *fts, FTSENT *ftsent, struct OPT *options, int isDirnameRequired) 
     return 0;
 }
 
+/**
+ * Creating a symbolic link name when encountered and adding it to
+ * element struct.
+ * 
+ **/
 int
 addLinkName(FTSENT *node, struct elements *el) {
     char linkname[PATH_MAX];
@@ -193,6 +236,12 @@ addLinkName(FTSENT *node, struct elements *el) {
     return 0;
 }
 
+/**
+ * Creates a maxsize structure which is used by print.c to pretty print
+ * the files by adding relevant whitespaces where needed in order to avoid
+ * congestion in data representation.
+ * 
+ **/
 struct maxsize
 generateMaxSizeStruct(FTSENT *node, struct maxsize max) {
     struct passwd *userInfo;
@@ -253,6 +302,14 @@ postChildTraversal(int *shouldPrintContent, FTS *fts, FTSENT *directory) {
     }
 }
 
+/**
+ * This method determines if the file being traversed needs to be
+ * printed on not.
+ * 
+ * Depends on -A -a flag to determine when to include ., .. and 
+ * hidden files.
+ * 
+ **/
 int
 shouldPrint(struct OPT *options, FTSENT *node) {
     if(options->listAllFlag) {

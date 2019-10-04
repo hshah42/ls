@@ -47,9 +47,18 @@ printLine(struct elements el, struct maxsize max) {
         addWhiteSpaces(whitespaces);
         fprintf(stdout, "%d ", temp->tm_mday);
         whitespaces = 2 - getNumberOfDigits(temp->tm_hour);
-        addWhiteSpaces(whitespaces);
-        fprintf(stdout, "%d:", temp->tm_hour);
-        fprintf(stdout, "%d ", temp->tm_min);
+        if (getNumberOfDigits(temp->tm_hour) > 1) {
+            addWhiteSpaces(whitespaces);
+            fprintf(stdout, "%d:", temp->tm_hour);
+        } else {
+            addWhiteSpaces(whitespaces - 1);
+            fprintf(stdout, "0%d:", temp->tm_hour);
+        }
+        if (getNumberOfDigits(temp->tm_min) > 1) {
+            fprintf(stdout, "%d ", temp->tm_min);
+        } else {
+            fprintf(stdout, "0%d ", temp->tm_min);
+        }
     }
 
     if(el.name != NULL) {
