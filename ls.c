@@ -66,7 +66,7 @@ void
 setOptions(int argc, char **argv, struct OPT *options) {
     int opt;
 
-    while((opt = getopt(argc, argv, "AailR")) != -1) {
+    while((opt = getopt(argc, argv, "AailRdSt")) != -1) {
         switch (opt) {
         case 'A':
             options->includeHiddenFiles = 1;
@@ -82,6 +82,15 @@ setOptions(int argc, char **argv, struct OPT *options) {
             break;
         case 'R':
             options->recurse = 1;
+            break;
+        case 'd':
+            options->listDirectories = 1;
+            break;
+        case 'S':
+            options->sortBySizeDescending = 1;
+            break;
+        case 't':
+            options->sortByLastModified = 1;
             break;
         case '?':
             fprintf(stderr, "Invalid Parameter");
@@ -109,7 +118,9 @@ readDir(char **files, struct OPT *options, int isDirnameRequired) {
         flags = flags | FTS_SEEDOT;
     }
     
-    if((fts = fts_open(files, flags, NULL)) == NULL) {
+    sort sortFunction = getSortType(options);
+
+    if((fts = fts_open(files, flags, sortFunction)) == NULL) {
         printError(strerror(errno));
         return 1;
     }
@@ -121,11 +132,22 @@ readDir(char **files, struct OPT *options, int isDirnameRequired) {
     return 0;
 }
 
+sort
+getSortType(struct OPT *options) {
+    if(options->sortBySizeDescending) {
+        return getSortFunctionalPointer(DESCENDING_SIZE);
+    }
+
+    if(options->sortByLastModified) {
+        return getSortFunctionalPointer(BY_LAST_MODIFIED);
+    }
+}
+
 /**
  * This function will perform traversing of the directories that are
  * passed in the arguments.
  * 
- * It will recursively iterate through the file system in a depth first way whenever 
+ * It will recursively iterate through the file system in a depth first way whenever
  * it encounters a directory.
  * 
  * It will call fts_children on every directory encountered. fts_children was used
@@ -411,7 +433,7 @@ allocateFile(int maxSize, int argc, char **argv, char **directories) {
             continue;
         }
 
-        if(S_ISDIR(stats.st_mode)) {
+        if (S_ISDIR(stats.st_mode)) {
             directories[index] = argv[i];
             index++;
         } else {

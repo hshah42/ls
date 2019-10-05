@@ -1,18 +1,14 @@
 #include <sys/types.h>
-#include <sys/stat.h>
-#include <fts.h>
 #include <dirent.h>
 #include <unistd.h>
-#include <stdio.h>
 #include <errno.h>
-#include <string.h>
 #include <stdlib.h>
-#include <string.h>
-#include <fts.h>
 #include <pwd.h>
 #include <grp.h>
 #include <limits.h>
 #include "print.h"
+#include "common.h"
+#include "compare.h"
 
 struct OPT
 {
@@ -21,6 +17,9 @@ struct OPT
     int printInode;
     int printStat;
     int recurse;
+    int listDirectories;
+    int sortBySizeDescending;
+    int sortByLastModified;
 };
 
 struct output
@@ -40,3 +39,4 @@ int shouldPrint(struct OPT *options, FTSENT *node);
 int postChildTraversal(int *shouldPrintContent, FTS *fts, FTSENT *directory);
 struct maxsize generateMaxSizeStruct(FTSENT *node, struct maxsize max);
 int addLinkName(FTSENT *node, struct elements *el);
+sort getSortType(struct OPT *options);

@@ -1,7 +1,4 @@
-#include <sys/stat.h>
-#include <stdio.h>
-#include <time.h>
-#include <string.h>
+#include "common.h"
 
 struct elements {
     char     *name;
