@@ -6,17 +6,17 @@ void
 printLine(struct elements el, struct maxsize max) {
     struct tm *temp;
 
-    if(el.inode > 0) {
+    if(*el.inode > 0) {
         long whitespaces = max.inode - getNumberOfDigits(*el.inode);
         addWhiteSpaces(whitespaces);
-        fprintf(stdout, "%llu ", *el.inode);
+        fprintf(stdout, "%lu ", *el.inode);
     }
     
     if(el.strmode != NULL) {
         fprintf(stdout, "%s ", el.strmode);
     }
 
-    if(el.hardlinks > 0) {
+    if(*el.hardlinks > 0) {
         long whitespaces = max.hardlinks - getNumberOfDigits(*el.hardlinks);
         addWhiteSpaces(whitespaces);
         fprintf(stdout, "%hu ", *el.hardlinks);
@@ -34,13 +34,13 @@ printLine(struct elements el, struct maxsize max) {
         addWhiteSpaces(whitespaces);
     }
 
-    if(el.size >= 0 && *(el.hasSize)) {
+    if(*el.size >= 0 && *(el.hasSize)) {
         long whitespaces = max.size - getNumberOfDigits(*el.size);
         addWhiteSpaces(whitespaces);
-        fprintf(stdout, "%lld ", *el.size);
+        fprintf(stdout, "%ld ", *el.size);
     }
 
-    if(el.time > 0) {
+    if(*el.time > 0) {
         temp = localtime(el.time);
         fprintf(stdout, "%s ", monthNames[temp->tm_mon]);
         long whitespaces = 2 - getNumberOfDigits(temp->tm_mday);
@@ -83,18 +83,22 @@ printError(char *error) {
 struct elements
 getDefaultStruct() {
     struct elements el;
-    int false = 0;
+    int defaultVal = 0;
+    time_t defaultTime = 0;
+    ino_t defaultInode = 0;
+    nlink_t defaultHardlink = 0;
+    off_t defaultSize = 0;
 
     el.name = NULL;
     el.strmode = NULL;
     el.owner = NULL;
     el.group = NULL;
     el.symbolicLink = NULL;
-    el.time = 0;
-    el.hardlinks = 0;
-    el.size = 0;
-    el.inode = 0;
-    el.hasSize = &false;
+    el.time = &defaultTime;
+    el.hardlinks = &defaultHardlink;
+    el.size = &defaultSize;
+    el.inode = &defaultInode;
+    el.hasSize = &defaultVal;
 
     return el;
 }
@@ -148,13 +152,13 @@ addWhiteSpaces(long number) {
     }
 }
 
-long
+unsigned long
 getNumberOfDigits(long number) {
     if(number == 0) {
         return 1;
     }
 
-    long count = 0;
+    unsigned long count = 0;
 
     while(number != 0) {
         number = number / 10;

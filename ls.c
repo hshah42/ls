@@ -10,9 +10,6 @@ int
 main(int argc, char **argv) {
     (void) setprogname(argv[0]);
     
-    FTS *fts;
-    FTSENT *ftsent;
-    
     struct OPT *options = malloc(sizeof(struct OPT));
     if(options == NULL) {
         printError(strerror(errno));
@@ -111,7 +108,6 @@ setOptions(int argc, char **argv, struct OPT *options) {
 int
 readDir(char **files, struct OPT *options, int isDirnameRequired) {
     FTS *fts;
-    FTSENT *ftsent;
     int flags = FTS_NOCHDIR | FTS_PHYSICAL;
 
     if(options->listAllFlag) {
@@ -125,7 +121,7 @@ readDir(char **files, struct OPT *options, int isDirnameRequired) {
         return 1;
     }
 
-    performLs(fts, ftsent, options, isDirnameRequired);    
+    performLs(fts, options, isDirnameRequired);    
     
     fts_close(fts);
 
@@ -141,6 +137,8 @@ getSortType(struct OPT *options) {
     if(options->sortByLastModified) {
         return getSortFunctionalPointer(BY_LAST_MODIFIED);
     }
+
+    return NULL;
 }
 
 /**
@@ -161,12 +159,13 @@ getSortType(struct OPT *options) {
  * values we gathered during the previous iteration of the same directory.
  **/
 int
-performLs(FTS *fts, FTSENT *ftsent, struct OPT *options, int isDirnameRequired) {
+performLs(FTS *fts, struct OPT *options, int isDirnameRequired) {
     int falseInit = 0;
     // This variable determines when to print the contents and
     // when to get the max values for printing.
     int *shouldPrintContent = &falseInit;
     struct maxsize max;
+    FTSENT *ftsent;
 
     while ((ftsent = fts_read(fts)) != NULL) {
         FTSENT* node = fts_children(fts, 0);
@@ -312,7 +311,7 @@ generateMaxSizeStruct(FTSENT *node, struct maxsize max) {
     return max;
 }
 
-int
+void
 postChildTraversal(int *shouldPrintContent, FTS *fts, FTSENT *directory) {
     if (!(*shouldPrintContent))
         fts_set(fts, directory, FTS_AGAIN);
@@ -409,7 +408,7 @@ generateElement(char *path, struct elements *el, struct OPT *options, FTSENT *ft
 
 int
 allocateFile(int maxSize, int argc, char **argv, char **directories) {
-    int initialErrorIndex=0, initialFileIndex=0, initialDirectoryIndex = 0;
+    int initialErrorIndex=0, initialFileIndex=0;
     
     char *errors[maxSize]; 
     int  *errorIndex = &initialErrorIndex;

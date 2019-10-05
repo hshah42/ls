@@ -15,14 +15,13 @@ struct elements {
 
 struct maxsize
 {
-    long name;
-    long owner;
-    long group;
-    long hardlinks;
-    long size;
-    long inode;
+    unsigned long name;
+    unsigned long owner;
+    unsigned long group;
+    unsigned long hardlinks;
+    unsigned long size;
+    unsigned long inode;
 };
-
 
 void printLine(struct elements el, struct maxsize max);
 struct elements getDefaultStruct();
@@ -33,5 +32,5 @@ void printDirectory(char *directoryName);
 void printNewLine();
 void addToLine(struct elements el);
 struct maxsize getDefaultMaxSizeStruct();
-long getNumberOfDigits(long number);
+unsigned long getNumberOfDigits(long number);
 void addWhiteSpaces(long number);
