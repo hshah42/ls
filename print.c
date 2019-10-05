@@ -6,20 +6,20 @@ void
 printLine(struct elements el, struct maxsize max) {
     struct tm *temp;
 
-    if(*el.inode > 0) {
-        long whitespaces = max.inode - getNumberOfDigits(*el.inode);
+    if(el.inode > 0) {
+        long whitespaces = max.inode - getNumberOfDigits(el.inode);
         addWhiteSpaces(whitespaces);
-        fprintf(stdout, "%lu ", *el.inode);
+        fprintf(stdout, "%lu ", el.inode);
     }
     
     if(el.strmode != NULL) {
         fprintf(stdout, "%s ", el.strmode);
     }
 
-    if(*el.hardlinks > 0) {
-        long whitespaces = max.hardlinks - getNumberOfDigits(*el.hardlinks);
+    if(el.hardlinks > 0) {
+        long whitespaces = max.hardlinks - getNumberOfDigits(el.hardlinks);
         addWhiteSpaces(whitespaces);
-        fprintf(stdout, "%hu ", *el.hardlinks);
+        fprintf(stdout, "%hu ", el.hardlinks);
     }
 
     if(el.owner != NULL) {
@@ -34,14 +34,14 @@ printLine(struct elements el, struct maxsize max) {
         addWhiteSpaces(whitespaces);
     }
 
-    if(*el.size >= 0 && *(el.hasSize)) {
-        long whitespaces = max.size - getNumberOfDigits(*el.size);
+    if(el.size >= 0 && (el.hasSize)) {
+        long whitespaces = max.size - getNumberOfDigits(el.size);
         addWhiteSpaces(whitespaces);
-        fprintf(stdout, "%ld ", *el.size);
+        fprintf(stdout, "%ld ", el.size);
     }
 
-    if(*el.time > 0) {
-        temp = localtime(el.time);
+    if(el.time > 0) {
+        temp = localtime(&(el.time));
         fprintf(stdout, "%s ", monthNames[temp->tm_mon]);
         long whitespaces = 2 - getNumberOfDigits(temp->tm_mday);
         addWhiteSpaces(whitespaces);
@@ -84,6 +84,7 @@ struct elements
 getDefaultStruct() {
     struct elements el;
     int defaultVal = 0;
+
     time_t defaultTime = 0;
     ino_t defaultInode = 0;
     nlink_t defaultHardlink = 0;
@@ -94,11 +95,11 @@ getDefaultStruct() {
     el.owner = NULL;
     el.group = NULL;
     el.symbolicLink = NULL;
-    el.time = &defaultTime;
-    el.hardlinks = &defaultHardlink;
-    el.size = &defaultSize;
-    el.inode = &defaultInode;
-    el.hasSize = &defaultVal;
+    el.time = defaultTime;
+    el.hardlinks = defaultHardlink;
+    el.size = defaultSize;
+    el.inode = defaultInode;
+    el.hasSize = defaultVal;
 
     return el;
 }

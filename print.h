@@ -6,11 +6,11 @@ struct elements {
     char     *owner;
     char     *group;
     char     *symbolicLink;
-    time_t   *time;
-    nlink_t  *hardlinks;
-    off_t    *size;
-    ino_t    *inode;
-    int      *hasSize;
+    time_t   time;
+    nlink_t  hardlinks;
+    off_t    size;
+    ino_t    inode;
+    int      hasSize;
 };
 
 struct maxsize

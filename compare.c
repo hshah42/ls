@@ -29,13 +29,46 @@ compareSizeAscending(const FTSENT **fileOnePointer, const FTSENT **fileTwoPointe
 }
 
 int 
-compareLastModified(const FTSENT **fileOnePointer, const FTSENT **fileTwoPointer) {
+compareLastModified(const FTSENT **fileOnePointer, 
+                    const FTSENT **fileTwoPointer) {
     const FTSENT *fileOne = *fileOnePointer;
     const FTSENT *fileTwo = *fileTwoPointer;
+    return compareTime(fileOne->fts_statp->st_mtimespec.tv_sec, 
+                       fileTwo->fts_statp->st_mtimespec.tv_sec);
+}
 
-    if(fileOne->fts_statp->st_mtimespec.tv_sec > fileTwo->fts_statp->st_mtimespec.tv_sec) {
+int 
+compareLastModifiedReverse(const FTSENT **fileOnePointer, 
+                           const FTSENT **fileTwoPointer) {
+    const FTSENT *fileOne = *fileOnePointer;
+    const FTSENT *fileTwo = *fileTwoPointer;
+    return compareTime(fileTwo->fts_statp->st_mtimespec.tv_sec, 
+                       fileOne->fts_statp->st_mtimespec.tv_sec);
+}
+
+int 
+compareLastFileStatusChange(const FTSENT **fileOnePointer, 
+                            const FTSENT **fileTwoPointer) {
+    const FTSENT *fileOne = *fileOnePointer;
+    const FTSENT *fileTwo = *fileTwoPointer;
+    return compareTime(fileOne->fts_statp->st_ctimespec.tv_sec, 
+                       fileTwo->fts_statp->st_ctimespec.tv_sec);
+}
+
+int 
+compareLastFileStatusChangeReverse(const FTSENT **fileOnePointer, 
+                                   const FTSENT **fileTwoPointer) {
+    const FTSENT *fileOne = *fileOnePointer;
+    const FTSENT *fileTwo = *fileTwoPointer;
+    return compareTime(fileTwo->fts_statp->st_ctimespec.tv_sec, 
+                       fileOne->fts_statp->st_ctimespec.tv_sec);
+}
+
+int
+compareTime(time_t timeOne, time_t timeTwo) {
+    if(timeOne > timeTwo) {
         return -1;
-    } else if (fileOne->fts_statp->st_mtimespec.tv_sec == fileTwo->fts_statp->st_mtimespec.tv_sec) {
+    } else if (timeOne == timeTwo) {
         return 0;
     } else {
         return 1;
@@ -56,6 +89,15 @@ getSortFunctionalPointer(sorting_type option) {
         break;
     case BY_LAST_MODIFIED:
         sort = &compareLastModified;
+        break;
+    case BY_LAST_MODIFIED_REV:
+        sort = &compareLastModifiedReverse;
+        break;
+    case BY_FILE_STATUS_CHANGE:
+        sort = &compareLastFileStatusChange;
+        break;
+    case BY_FILE_STATUS_CHANGE_REV:
+        sort = &compareLastFileStatusChangeReverse;
         break;
     default:
         break;

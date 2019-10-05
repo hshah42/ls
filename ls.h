@@ -16,10 +16,13 @@ struct OPT
     int includeHiddenFiles;
     int printInode;
     int printStat;
+    int printOwnerAndGroupNames;
+    int printOwnerAndGroupID;
     int recurse;
     int listDirectories;
     int sortBySizeDescending;
     int sortByLastModified;
+    int useFileStatusChangeTime;
 };
 
 struct output
@@ -32,11 +35,11 @@ int readDir(char **files, struct OPT *options, int isDirnameRequired);
 void setOptions(int argc, char **argv, struct OPT *options);
 void initOptions(struct OPT *options);
 int allocateFile(int maxSize, int argc, char **argv, char **files);
-int generateElement(char *pathname, struct elements *el, struct OPT *options, FTSENT *ftsent);
-int changeDirectory(char *pathname);
+int generateElement(struct elements *el, struct OPT *options, FTSENT *ftsent);
 int performLs(FTS *fts, struct OPT *options, int isDirnameRequired);
 int shouldPrint(struct OPT *options, FTSENT *node);
 void postChildTraversal(int *shouldPrintContent, FTS *fts, FTSENT *directory);
 struct maxsize generateMaxSizeStruct(FTSENT *node, struct maxsize max);
 int addLinkName(FTSENT *node, struct elements *el);
+void resetSortOptions(struct OPT *options);
 sort getSortType(struct OPT *options);

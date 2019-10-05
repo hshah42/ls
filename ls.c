@@ -63,7 +63,7 @@ void
 setOptions(int argc, char **argv, struct OPT *options) {
     int opt;
 
-    while((opt = getopt(argc, argv, "AailRdSt")) != -1) {
+    while((opt = getopt(argc, argv, "AailRdStcn")) != -1) {
         switch (opt) {
         case 'A':
             options->includeHiddenFiles = 1;
@@ -76,6 +76,8 @@ setOptions(int argc, char **argv, struct OPT *options) {
             break;
         case 'l':
             options->printStat = 1;
+            options->printOwnerAndGroupNames = 1;
+            options->printOwnerAndGroupID = 0;
             break;
         case 'R':
             options->recurse = 1;
@@ -84,10 +86,20 @@ setOptions(int argc, char **argv, struct OPT *options) {
             options->listDirectories = 1;
             break;
         case 'S':
+            resetSortOptions(options);
             options->sortBySizeDescending = 1;
             break;
         case 't':
+            resetSortOptions(options);
             options->sortByLastModified = 1;
+            break;
+        case 'c':
+            options->useFileStatusChangeTime = 1;
+            break;
+        case 'n':
+            options->printStat = 1;
+            options->printOwnerAndGroupNames = 0;
+            options->printOwnerAndGroupID = 1;
             break;
         case '?':
             fprintf(stderr, "Invalid Parameter");
@@ -96,6 +108,17 @@ setOptions(int argc, char **argv, struct OPT *options) {
             break;
         }
     }
+}
+
+/**
+ * This method resets the sorting options since
+ * the last specified sorting option is used
+ * 
+ **/
+void
+resetSortOptions(struct OPT *options) {
+    options->sortByLastModified = 0;
+    options->sortBySizeDescending = 0;
 }
 
 /**
@@ -135,7 +158,11 @@ getSortType(struct OPT *options) {
     }
 
     if(options->sortByLastModified) {
-        return getSortFunctionalPointer(BY_LAST_MODIFIED);
+        if (options->useFileStatusChangeTime) {
+            return getSortFunctionalPointer(BY_FILE_STATUS_CHANGE);
+        } else {
+            return getSortFunctionalPointer(BY_LAST_MODIFIED);
+        }
     }
 
     return NULL;
@@ -175,11 +202,7 @@ performLs(FTS *fts, struct OPT *options, int isDirnameRequired) {
             continue;
         }
 
-        if (node == NULL) {
-            continue;
-        }
-            
-        if (node->fts_level > 1 && !(options->recurse)) {
+        if (node == NULL || (node->fts_level > 1 && !(options->recurse))) {
             continue;
         }
         
@@ -202,15 +225,16 @@ performLs(FTS *fts, struct OPT *options, int isDirnameRequired) {
                     
                     if(S_ISLNK(node->fts_statp->st_mode) && options->printStat) {
                         if (addLinkName(node, &el) != 0) {
-                            printError(strerror(errno));
-                            break;
+                            node = node->fts_link;
+                            continue;
                         }
                     } else {
                         el.name = node->fts_name; 
-                    }               
-                    
-                    generateElement(node->fts_path, &el, options, node);
-                    printLine(el, max);
+                    }
+
+                    if (generateElement(&el, options, node) == 0) {
+                        printLine(el, max);
+                    }
                 }
             } else {
                 if (shouldPrint(options, node)) {
@@ -243,7 +267,7 @@ addLinkName(FTSENT *node, struct elements *el) {
     strcat(pathname, node->fts_name);
     ssize_t len;
 
-    if ((len = readlink(pathname, linkname, sizeof(linkname) - 1)) == -1) {
+    if ((len = readlink(pathname, linkname, (sizeof(linkname) - 1) )) == -1) {
         printError(strerror(errno));
         return 1;
     }
@@ -333,10 +357,10 @@ postChildTraversal(int *shouldPrintContent, FTS *fts, FTSENT *directory) {
  **/
 int
 shouldPrint(struct OPT *options, FTSENT *node) {
-    if(options->listAllFlag) {
+    if (options->listAllFlag) {
         return 1;
     } else {
-        if(strncmp(node->fts_name, ".", 1)) {
+        if (strncmp(node->fts_name, ".", 1)) {
             return 1;
         } else {
             if(options->includeHiddenFiles) {
@@ -349,24 +373,19 @@ shouldPrint(struct OPT *options, FTSENT *node) {
 }
 
 int
-generateElement(char *path, struct elements *el, struct OPT *options, FTSENT *ftsent) {
-    struct stat stats;
+generateElement(struct elements *el, struct OPT *options, FTSENT *ftsent) {
     struct passwd *userInfo;
     struct group *groupInfo;
     char *permission = malloc(10);
 
     if (options->printInode) {
-        el->inode = &(ftsent->fts_statp->st_ino);
+        el->inode = ftsent->fts_statp->st_ino;
     }
 
     if (options->printStat) {
-        if(lstat(path, &stats) != 0) {
-            printError(strerror(errno));
-            return 1;
-        }
-        
-        el->hardlinks = &(ftsent->fts_statp->st_nlink);
-        if ((userInfo = getpwuid(ftsent->fts_statp->st_uid)) == NULL) {
+        el->hardlinks = ftsent->fts_statp->st_nlink;
+
+        if (options->printOwnerAndGroupID || (userInfo = getpwuid(ftsent->fts_statp->st_uid)) == NULL) {
             int size = getNumberOfDigits(ftsent->fts_statp->st_uid);
             char *owner = malloc(size + 1);
             if(owner == NULL) {
@@ -380,10 +399,10 @@ generateElement(char *path, struct elements *el, struct OPT *options, FTSENT *ft
             el->owner = userInfo->pw_name;
         }
         
-        if ((groupInfo = getgrgid(ftsent->fts_statp->st_gid)) == NULL) {
+        if (options->printOwnerAndGroupID || ((groupInfo = getgrgid(ftsent->fts_statp->st_gid)) == NULL)) {
             int size = getNumberOfDigits(ftsent->fts_statp->st_gid);
             char *group = malloc(size + 1);
-            if(group == NULL) {
+            if (group == NULL) {
                 printError(strerror(errno));
                 return 1;
             }
@@ -393,10 +412,17 @@ generateElement(char *path, struct elements *el, struct OPT *options, FTSENT *ft
         } else {
             el->group = groupInfo->gr_name;
         }
-        el->size = &(ftsent->fts_statp->st_size);
+
+        el->size = ftsent->fts_statp->st_size;
         int hasSize = 1;
-        el->hasSize = &hasSize;
-        el->time = &(ftsent->fts_statp->st_mtimespec.tv_sec);
+        el->hasSize = hasSize;
+        
+        if (options->useFileStatusChangeTime) {
+            el->time = ftsent->fts_statp->st_ctimespec.tv_sec;
+        } else {
+            el->time = ftsent->fts_statp->st_mtimespec.tv_sec;
+        }
+        
         strmode(ftsent->fts_statp->st_mode, permission);
         el->strmode = strdup(permission);
     }
