@@ -63,7 +63,7 @@ void
 setOptions(int argc, char **argv, struct OPT *options) {
     int opt;
 
-    while((opt = getopt(argc, argv, "AailRdStcn")) != -1) {
+    while((opt = getopt(argc, argv, "AailRdStcnu")) != -1) {
         switch (opt) {
         case 'A':
             options->includeHiddenFiles = 1;
@@ -95,11 +95,16 @@ setOptions(int argc, char **argv, struct OPT *options) {
             break;
         case 'c':
             options->useFileStatusChangeTime = 1;
+            options->useLastAccessTime = 0;
             break;
         case 'n':
             options->printStat = 1;
             options->printOwnerAndGroupNames = 0;
             options->printOwnerAndGroupID = 1;
+            break;
+        case 'u':
+            options->useFileStatusChangeTime = 0;
+            options->useLastAccessTime = 1;
             break;
         case '?':
             fprintf(stderr, "Invalid Parameter");
@@ -131,7 +136,7 @@ resetSortOptions(struct OPT *options) {
 int
 readDir(char **files, struct OPT *options, int isDirnameRequired) {
     FTS *fts;
-    int flags = FTS_NOCHDIR | FTS_PHYSICAL;
+    int flags = FTS_PHYSICAL | FTS_NOCHDIR;
 
     if(options->listAllFlag) {
         flags = flags | FTS_SEEDOT;
@@ -160,6 +165,8 @@ getSortType(struct OPT *options) {
     if(options->sortByLastModified) {
         if (options->useFileStatusChangeTime) {
             return getSortFunctionalPointer(BY_FILE_STATUS_CHANGE);
+        } else if (options->useLastAccessTime) {
+            return getSortFunctionalPointer(BY_FILE_ACCESS_TIME);
         } else {
             return getSortFunctionalPointer(BY_LAST_MODIFIED);
         }
@@ -221,19 +228,9 @@ performLs(FTS *fts, struct OPT *options, int isDirnameRequired) {
         {
             if (*shouldPrintContent) {
                 if(shouldPrint(options, node)) {
-                    struct elements el = getDefaultStruct();
-                    
-                    if(S_ISLNK(node->fts_statp->st_mode) && options->printStat) {
-                        if (addLinkName(node, &el) != 0) {
-                            node = node->fts_link;
-                            continue;
-                        }
-                    } else {
-                        el.name = node->fts_name; 
-                    }
-
-                    if (generateElement(&el, options, node) == 0) {
-                        printLine(el, max);
+                    if(printInformation(options, node, max) != 0) {
+                        node = node->fts_link;
+                        continue;
                     }
                 }
             } else {
@@ -254,6 +251,27 @@ performLs(FTS *fts, struct OPT *options, int isDirnameRequired) {
     return 0;
 }
 
+int
+printInformation(struct OPT *options, FTSENT *node, struct maxsize max) {
+    struct elements el = getDefaultStruct();
+                    
+    if(S_ISLNK(node->fts_statp->st_mode) && options->printStat) {
+        if (addLinkName(node, &el) != 0) {
+            return 1;
+        }
+    } else {
+        el.name = node->fts_name; 
+    }
+
+    if (generateElement(&el, options, node) == 0) {
+        printLine(el, max);
+    } else {
+        return 1;
+    }
+
+    return 0;
+}
+
 /**
  * Creating a symbolic link name when encountered and adding it to
  * element struct.
@@ -263,6 +281,7 @@ int
 addLinkName(FTSENT *node, struct elements *el) {
     char linkname[PATH_MAX];
     char pathname[node->fts_namelen + node->fts_pathlen + 1];
+    pathname[0]='\0';
     strcat(pathname, node->fts_path);
     strcat(pathname, node->fts_name);
     ssize_t len;
@@ -385,7 +404,8 @@ generateElement(struct elements *el, struct OPT *options, FTSENT *ftsent) {
     if (options->printStat) {
         el->hardlinks = ftsent->fts_statp->st_nlink;
 
-        if (options->printOwnerAndGroupID || (userInfo = getpwuid(ftsent->fts_statp->st_uid)) == NULL) {
+        if (options->printOwnerAndGroupID || 
+            (userInfo = getpwuid(ftsent->fts_statp->st_uid)) == NULL) {
             int size = getNumberOfDigits(ftsent->fts_statp->st_uid);
             char *owner = malloc(size + 1);
             if(owner == NULL) {
@@ -399,7 +419,8 @@ generateElement(struct elements *el, struct OPT *options, FTSENT *ftsent) {
             el->owner = userInfo->pw_name;
         }
         
-        if (options->printOwnerAndGroupID || ((groupInfo = getgrgid(ftsent->fts_statp->st_gid)) == NULL)) {
+        if (options->printOwnerAndGroupID 
+            || ((groupInfo = getgrgid(ftsent->fts_statp->st_gid)) == NULL)) {
             int size = getNumberOfDigits(ftsent->fts_statp->st_gid);
             char *group = malloc(size + 1);
             if (group == NULL) {
@@ -419,6 +440,8 @@ generateElement(struct elements *el, struct OPT *options, FTSENT *ftsent) {
         
         if (options->useFileStatusChangeTime) {
             el->time = ftsent->fts_statp->st_ctimespec.tv_sec;
+        } else if (options->useLastAccessTime) {
+            el->time = ftsent->fts_statp->st_atimespec.tv_sec;
         } else {
             el->time = ftsent->fts_statp->st_mtimespec.tv_sec;
         }

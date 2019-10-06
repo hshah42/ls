@@ -23,6 +23,7 @@ struct OPT
     int sortBySizeDescending;
     int sortByLastModified;
     int useFileStatusChangeTime;
+    int useLastAccessTime;
 };
 
 struct output
@@ -43,3 +44,4 @@ struct maxsize generateMaxSizeStruct(FTSENT *node, struct maxsize max);
 int addLinkName(FTSENT *node, struct elements *el);
 void resetSortOptions(struct OPT *options);
 sort getSortType(struct OPT *options);
+int printInformation(struct OPT *options, FTSENT *node, struct maxsize max);

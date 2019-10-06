@@ -64,6 +64,24 @@ compareLastFileStatusChangeReverse(const FTSENT **fileOnePointer,
                        fileOne->fts_statp->st_ctimespec.tv_sec);
 }
 
+int 
+compareAccessTime(const FTSENT **fileOnePointer, 
+                  const FTSENT **fileTwoPointer) {
+    const FTSENT *fileOne = *fileOnePointer;
+    const FTSENT *fileTwo = *fileTwoPointer;
+    return compareTime(fileOne->fts_statp->st_atimespec.tv_sec, 
+                       fileTwo->fts_statp->st_atimespec.tv_sec);
+}
+
+int 
+compareAccessTimeReverse(const FTSENT **fileOnePointer, 
+                         const FTSENT **fileTwoPointer) {
+    const FTSENT *fileOne = *fileOnePointer;
+    const FTSENT *fileTwo = *fileTwoPointer;
+    return compareTime(fileTwo->fts_statp->st_atimespec.tv_sec, 
+                       fileOne->fts_statp->st_atimespec.tv_sec);
+}
+
 int
 compareTime(time_t timeOne, time_t timeTwo) {
     if(timeOne > timeTwo) {
@@ -98,6 +116,12 @@ getSortFunctionalPointer(sorting_type option) {
         break;
     case BY_FILE_STATUS_CHANGE_REV:
         sort = &compareLastFileStatusChangeReverse;
+        break;
+    case BY_FILE_ACCESS_TIME:
+        sort = &compareAccessTime;
+        break;
+    case BY_FILE_ACCESS_TIME_REV:
+        sort = &compareAccessTimeReverse;
         break;
     default:
         break;
