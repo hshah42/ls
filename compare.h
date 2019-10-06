@@ -10,7 +10,8 @@ typedef enum {
     BY_FILE_STATUS_CHANGE = 4,
     BY_FILE_STATUS_CHANGE_REV = 5,
     BY_FILE_ACCESS_TIME = 6,
-    BY_FILE_ACCESS_TIME_REV = 7
+    BY_FILE_ACCESS_TIME_REV = 7,
+    LEXOGRAHICALLY = 8
 } sorting_type;
 
 int compareSizeAscending(const FTSENT **fileOne, const FTSENT **fileTwo);
@@ -21,5 +22,6 @@ int compareLastFileStatusChange(const FTSENT **fileOnePointer, const FTSENT **fi
 int compareLastFileStatusChangeReverse(const FTSENT **fileOnePointer, const FTSENT **fileTwoPointer);
 int compareAccessTime(const FTSENT **fileOnePointer, const FTSENT **fileTwoPointer);
 int compareAccessTimeReverse(const FTSENT **fileOnePointer, const FTSENT **fileTwoPointer);
+int compareLexographically(const FTSENT **fileOnePointer, const FTSENT **fileTwoPointer);
 sort getSortFunctionalPointer(sorting_type option);
-int compareTime(time_t timeOne, time_t timeTwo);
+int compareTime(time_t timeOne, time_t timeTwo, const FTSENT **fileOnePointer, const FTSENT **fileTwoPointer);

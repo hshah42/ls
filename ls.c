@@ -63,7 +63,7 @@ void
 setOptions(int argc, char **argv, struct OPT *options) {
     int opt;
 
-    while((opt = getopt(argc, argv, "AailRdStcnu")) != -1) {
+    while((opt = getopt(argc, argv, "AailRdStcnuf")) != -1) {
         switch (opt) {
         case 'A':
             options->includeHiddenFiles = 1;
@@ -105,6 +105,9 @@ setOptions(int argc, char **argv, struct OPT *options) {
         case 'u':
             options->useFileStatusChangeTime = 0;
             options->useLastAccessTime = 1;
+            break;
+        case 'f':
+            options->keepUnsorted = 1;
             break;
         case '?':
             fprintf(stderr, "Invalid Parameter");
@@ -158,11 +161,15 @@ readDir(char **files, struct OPT *options, int isDirnameRequired) {
 
 sort
 getSortType(struct OPT *options) {
-    if(options->sortBySizeDescending) {
+    if (options->keepUnsorted) {
+        return NULL;
+    }
+
+    if (options->sortBySizeDescending) {
         return getSortFunctionalPointer(DESCENDING_SIZE);
     }
 
-    if(options->sortByLastModified) {
+    if (options->sortByLastModified) {
         if (options->useFileStatusChangeTime) {
             return getSortFunctionalPointer(BY_FILE_STATUS_CHANGE);
         } else if (options->useLastAccessTime) {
@@ -172,7 +179,7 @@ getSortType(struct OPT *options) {
         }
     }
 
-    return NULL;
+    return getSortFunctionalPointer(LEXOGRAHICALLY);
 }
 
 /**
@@ -198,10 +205,20 @@ performLs(FTS *fts, struct OPT *options, int isDirnameRequired) {
     // This variable determines when to print the contents and
     // when to get the max values for printing.
     int *shouldPrintContent = &falseInit;
-    struct maxsize max;
+    struct maxsize max = getDefaultMaxSizeStruct();
     FTSENT *ftsent;
 
     while ((ftsent = fts_read(fts)) != NULL) {
+        if (options->listDirectories) {
+            if (ftsent->fts_level > 0 || ftsent->fts_info == FTS_DP) {
+                fts_set(fts, ftsent, FTS_SKIP);
+                continue;
+            }
+            max = generateMaxSizeStruct(ftsent, max);
+            printInformation(options, ftsent, max);
+            continue;
+        }
+
         FTSENT* node = fts_children(fts, 0);
 
         if (ftsent->fts_level > 1 && !(options->recurse)) {
@@ -227,8 +244,8 @@ performLs(FTS *fts, struct OPT *options, int isDirnameRequired) {
         while (node != NULL)
         {
             if (*shouldPrintContent) {
-                if(shouldPrint(options, node)) {
-                    if(printInformation(options, node, max) != 0) {
+                if (shouldPrint(options, node)) {
+                    if (printInformation(options, node, max) != 0) {
                         node = node->fts_link;
                         continue;
                     }
@@ -245,7 +262,6 @@ performLs(FTS *fts, struct OPT *options, int isDirnameRequired) {
         }
 
         postChildTraversal(shouldPrintContent, fts, directory);
-        
     }
 
     return 0;
@@ -255,7 +271,7 @@ int
 printInformation(struct OPT *options, FTSENT *node, struct maxsize max) {
     struct elements el = getDefaultStruct();
                     
-    if(S_ISLNK(node->fts_statp->st_mode) && options->printStat) {
+    if (S_ISLNK(node->fts_statp->st_mode) && options->printStat) {
         if (addLinkName(node, &el) != 0) {
             return 1;
         }

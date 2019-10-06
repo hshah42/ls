@@ -121,7 +121,7 @@ getDefaultMaxSizeStruct() {
 void
 printFile(char **files, int *fileCount) {
     int addLine = 0;
-    for(int i = 0; i < *fileCount; i++) {
+    for (int i = 0; i < *fileCount; i++) {
         fprintf(stdout, "%s \t", files[i]);
         addLine = 1;
     }
@@ -136,7 +136,7 @@ printDirectory(char *directoryName) {
 
 void 
 printErrors(char **errors, int *errorCount) {
-    for(int i = 0; i < *errorCount; i++) {
+    for (int i = 0; i < *errorCount; i++) {
         printError(errors[i]);
     }
 }
@@ -148,7 +148,7 @@ printNewLine() {
 
 void
 addWhiteSpaces(long number) {
-    for(int i = 0; i < number; i++) {
+    for (int i = 0; i < number; i++) {
         fprintf(stdout, " ");
     }
 }

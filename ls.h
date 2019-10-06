@@ -24,6 +24,7 @@ struct OPT
     int sortByLastModified;
     int useFileStatusChangeTime;
     int useLastAccessTime;
+    int keepUnsorted;
 };
 
 struct output
