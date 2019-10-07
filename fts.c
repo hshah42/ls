@@ -45,7 +45,7 @@ main(int argc, char **argv) {
         //     fts_set(fts, ftsent, FTS_SKIP);
         //     continue;
         // }
-
+        printf("file %s \n", ftsent->fts_name);
         file_ls(fts, 0, shouldPrint);
         //fprintf(stdout, "innnnnn %lld %s\n", ftsent->fts_statp->st_size,ftsent->fts_name);
     }

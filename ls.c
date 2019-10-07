@@ -63,7 +63,7 @@ void
 setOptions(int argc, char **argv, struct OPT *options) {
     int opt;
 
-    while((opt = getopt(argc, argv, "AailRdStcnuf")) != -1) {
+    while((opt = getopt(argc, argv, "AailRdStcnufFr")) != -1) {
         switch (opt) {
         case 'A':
             options->includeHiddenFiles = 1;
@@ -108,6 +108,12 @@ setOptions(int argc, char **argv, struct OPT *options) {
             break;
         case 'f':
             options->keepUnsorted = 1;
+            break;
+        case 'F':
+            options->appendFileType = 1;
+            break;
+        case 'r':
+            options->reverseOrder = 1;
             break;
         case '?':
             fprintf(stderr, "Invalid Parameter");
@@ -166,17 +172,33 @@ getSortType(struct OPT *options) {
     }
 
     if (options->sortBySizeDescending) {
+        if (options->reverseOrder) {
+            return getSortFunctionalPointer(ASCENDING_SIZE);
+        }
         return getSortFunctionalPointer(DESCENDING_SIZE);
     }
 
     if (options->sortByLastModified) {
         if (options->useFileStatusChangeTime) {
+            if (options->reverseOrder) {
+                return getSortFunctionalPointer(BY_FILE_STATUS_CHANGE_REV);
+            }
             return getSortFunctionalPointer(BY_FILE_STATUS_CHANGE);
         } else if (options->useLastAccessTime) {
+            if (options->reverseOrder) {
+                return getSortFunctionalPointer(BY_FILE_ACCESS_TIME_REV);
+            }
             return getSortFunctionalPointer(BY_FILE_ACCESS_TIME);
         } else {
+            if (options->reverseOrder) {
+                return getSortFunctionalPointer(BY_LAST_MODIFIED_REV);
+            }
             return getSortFunctionalPointer(BY_LAST_MODIFIED);
         }
+    }
+
+    if (options->reverseOrder) {
+        return getSortFunctionalPointer(LEXOGRAHICALLY_REV);
     }
 
     return getSortFunctionalPointer(LEXOGRAHICALLY);
@@ -279,6 +301,10 @@ printInformation(struct OPT *options, FTSENT *node, struct maxsize max) {
         el.name = node->fts_name; 
     }
 
+    if (options->appendFileType) {
+        appendType(node, &el);
+    }
+
     if (generateElement(&el, options, node) == 0) {
         printLine(el, max);
     } else {
@@ -286,6 +312,29 @@ printInformation(struct OPT *options, FTSENT *node, struct maxsize max) {
     }
 
     return 0;
+}
+
+void
+appendType(FTSENT *node, struct elements *el) {
+    char newName[strlen(el->name) + 2];
+    newName[0]='\0';
+    strcat(newName, node->fts_name);
+
+    if (S_ISDIR(node->fts_statp->st_mode)) {
+        strcat(newName, "/\0");
+    } else if (S_ISLNK(node->fts_statp->st_mode)) {
+        strcat(newName, "@\0");
+    } else if (node->fts_info == FTS_W) {
+        strcat(newName, "%\0");
+    } else if (S_ISSOCK(node->fts_statp->st_mode)) {
+        strcat(newName, "=\0");
+    } else if (S_ISFIFO(node->fts_statp->st_mode)) {
+        strcat(newName, "|\0");
+    } else if (node->fts_statp->st_mode & S_IXUSR) {
+        strcat(newName, "*\0");
+    }
+
+    el->name = strdup(newName);
 }
 
 /**
@@ -403,7 +452,6 @@ shouldPrint(struct OPT *options, FTSENT *node) {
             }
         }
     }
-
     return 0;
 }
 

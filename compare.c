@@ -103,6 +103,15 @@ compareLexographically(const FTSENT **fileOnePointer,
     return strcmp(fileOne->fts_name, fileTwo->fts_name);
 }
 
+int 
+compareLexographicallyReverese(const FTSENT **fileOnePointer, 
+                               const FTSENT **fileTwoPointer) {
+    const FTSENT *fileOne = *fileOnePointer;
+    const FTSENT *fileTwo = *fileTwoPointer;
+    
+    return strcmp(fileTwo->fts_name, fileOne->fts_name);
+}
+
 int
 compareTime(time_t timeOne, 
             time_t timeTwo, 
@@ -149,6 +158,9 @@ getSortFunctionalPointer(sorting_type option) {
         break;
     case LEXOGRAHICALLY:
         sort = &compareLexographically;
+        break;
+    case LEXOGRAHICALLY_REV:
+        sort = &compareLexographicallyReverese;
         break;
     default:
         break;

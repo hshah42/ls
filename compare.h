@@ -11,7 +11,8 @@ typedef enum {
     BY_FILE_STATUS_CHANGE_REV = 5,
     BY_FILE_ACCESS_TIME = 6,
     BY_FILE_ACCESS_TIME_REV = 7,
-    LEXOGRAHICALLY = 8
+    LEXOGRAHICALLY = 8,
+    LEXOGRAHICALLY_REV = 9
 } sorting_type;
 
 int compareSizeAscending(const FTSENT **fileOne, const FTSENT **fileTwo);

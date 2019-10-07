@@ -25,6 +25,8 @@ struct OPT
     int useFileStatusChangeTime;
     int useLastAccessTime;
     int keepUnsorted;
+    int appendFileType;
+    int reverseOrder;
 };
 
 struct output
@@ -46,3 +48,4 @@ int addLinkName(FTSENT *node, struct elements *el);
 void resetSortOptions(struct OPT *options);
 sort getSortType(struct OPT *options);
 int printInformation(struct OPT *options, FTSENT *node, struct maxsize max);
+void appendType(FTSENT *node, struct elements *el);
