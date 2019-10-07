@@ -38,10 +38,10 @@ struct output
     struct elements el[];
 };
 
-int readDir(char **files, struct OPT *options, int isDirnameRequired);
+int readDir(char **files, struct OPT *options, int isDirnameRequired, int onFiles, int fileCount);
 void setOptions(int argc, char **argv, struct OPT *options);
 void initOptions(struct OPT *options);
-int allocateFile(int maxSize, int argc, char **argv, char **files);
+int allocateFile(int maxSize, int argc, char **argv, struct OPT *options, char **files);
 int generateElement(struct elements *el, struct OPT *options, FTSENT *ftsent);
 int performLs(FTS *fts, struct OPT *options, int isDirnameRequired);
 int shouldPrint(struct OPT *options, FTSENT *node);
@@ -53,3 +53,4 @@ sort getSortType(struct OPT *options);
 int printInformation(struct OPT *options, FTSENT *node, struct maxsize max);
 void appendType(FTSENT *node, struct elements *el);
 void checkPrintableCharacters(struct elements *el);
+int preformLsOnfiles (FTS *fts, struct OPT *options, int fileCount);

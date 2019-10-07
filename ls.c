@@ -29,7 +29,7 @@ main(int argc, char **argv) {
     if(optind == argc) {
         char **dir = malloc(2);
         dir[0] = "./";
-        readDir(dir, options, 0);
+        readDir(dir, options, 0, 0, 1);
         free(dir);
     }
     else
@@ -41,13 +41,13 @@ main(int argc, char **argv) {
             return 1;
         }
 
-        int dirSize = allocateFile(maxSize, argc, argv, directories);
+        int dirSize = allocateFile(maxSize, argc, argv, options, directories);
         
         if (dirSize > 0) {
             if((argc - optind) == 1) {
-                readDir(directories, options, 0);
+                readDir(directories, options, 0, 0, dirSize);
             } else {
-                readDir(directories, options, 1);
+                readDir(directories, options, 1, 0, dirSize);
             }
         }
 
@@ -156,7 +156,8 @@ resetSortOptions(struct OPT *options) {
  * 
  **/
 int
-readDir(char **files, struct OPT *options, int isDirnameRequired) {
+readDir(char **files, struct OPT *options, 
+        int isDirnameRequired, int onFiles, int fileCount) {
     FTS *fts;
     int flags = FTS_PHYSICAL | FTS_NOCHDIR;
 
@@ -171,9 +172,13 @@ readDir(char **files, struct OPT *options, int isDirnameRequired) {
         return 1;
     }
 
-    performLs(fts, options, isDirnameRequired);    
+    if (onFiles) {
+        preformLsOnfiles(fts, options, fileCount);
+    } else {
+        performLs(fts, options, isDirnameRequired);    
+    }
     
-    fts_close(fts);
+    (void) fts_close(fts);
 
     return 0;
 }
@@ -266,9 +271,11 @@ performLs(FTS *fts, struct OPT *options, int isDirnameRequired) {
         }
         
         if (*shouldPrintContent) {
-            if(isDirnameRequired || options->recurse) {
+            if (isDirnameRequired) {
                 printNewLine();
                 printDirectory(node->fts_parent->fts_path);
+            } else if (options->recurse) {
+                isDirnameRequired = 1;
             }
         }
         else
@@ -297,6 +304,33 @@ performLs(FTS *fts, struct OPT *options, int isDirnameRequired) {
         }
 
         postChildTraversal(shouldPrintContent, fts, directory);
+    }
+
+    return 0;
+}
+
+int
+preformLsOnfiles (FTS *fts, struct OPT *options, int fileCount) {
+    struct maxsize max = getDefaultMaxSizeStruct();
+    FTSENT *ftsent;
+    FTSENT* entries[fileCount + 1];
+    int index = 0;
+
+    while ((ftsent = fts_read(fts)) != NULL) {
+        if (ftsent->fts_level > 0) {
+            fts_set(fts, ftsent, FTS_SKIP);
+            continue;
+        }
+        entries[index] = ftsent;
+        index++;
+    }
+
+    for (int i = 0; i < fileCount ;i++) {
+        max = generateMaxSizeStruct(entries[i], max);
+    }
+
+    for (int i = 0; i < fileCount; i++) {
+        printInformation(options, entries[i], max);
     }
 
     return 0;
@@ -374,14 +408,17 @@ appendType(FTSENT *node, struct elements *el) {
  * 
  **/
 int
-addLinkName(FTSENT *node, struct elements *el) {
+addLinkName(FTSENT *node,  struct elements *el) {
     char linkname[PATH_MAX];
     char pathname[node->fts_namelen + node->fts_pathlen + 1];
     pathname[0]='\0';
     strcat(pathname, node->fts_path);
-    strcat(pathname, node->fts_name);
+    
+    if (S_ISDIR(node->fts_parent->fts_statp->st_mode)) {
+        strcat(pathname, node->fts_name);  
+    }
+    
     ssize_t len;
-
     if ((len = readlink(pathname, linkname, (sizeof(linkname) - 1) )) == -1) {
         printError(strerror(errno));
         return 1;
@@ -389,6 +426,7 @@ addLinkName(FTSENT *node, struct elements *el) {
 
     linkname[len] = '\0';
     char fullLink[strlen(linkname) + strlen(node->fts_name) + 1];
+    fullLink[0] = '\0';
     strcat(fullLink, node->fts_name);
     strcat(fullLink, " -> ");
     strcat(fullLink, linkname);
@@ -557,7 +595,8 @@ generateElement(struct elements *el, struct OPT *options, FTSENT *ftsent) {
 }
 
 int
-allocateFile(int maxSize, int argc, char **argv, char **directories) {
+allocateFile(int maxSize, int argc, char **argv, 
+                struct OPT *options, char **directories) {
     int initialErrorIndex=0, initialFileIndex=0;
     
     char *errors[maxSize]; 
@@ -592,7 +631,11 @@ allocateFile(int maxSize, int argc, char **argv, char **directories) {
     }
 
     printErrors(errors, errorIndex);
-    printFile(files, fileIndex);
+    
+    if (*fileIndex > 0) {
+        files[*fileIndex] = '\0';
+        readDir(files, options, 0, 1, *fileIndex);
+    }
 
     return index;
 }
