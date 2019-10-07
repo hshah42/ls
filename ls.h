@@ -8,6 +8,7 @@
 #include <limits.h>
 #include "print.h"
 #include "common.h"
+#include <ctype.h>
 #include "compare.h"
 
 struct OPT
@@ -27,6 +28,8 @@ struct OPT
     int keepUnsorted;
     int appendFileType;
     int reverseOrder;
+    int replaceNonPrintables;
+    int printNonPrintables;
 };
 
 struct output
@@ -49,3 +52,4 @@ void resetSortOptions(struct OPT *options);
 sort getSortType(struct OPT *options);
 int printInformation(struct OPT *options, FTSENT *node, struct maxsize max);
 void appendType(FTSENT *node, struct elements *el);
+void checkPrintableCharacters(struct elements *el);

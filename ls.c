@@ -16,6 +16,12 @@ main(int argc, char **argv) {
         return 1;
     }
 
+    if (isatty(STDOUT_FILENO)) {
+        options->replaceNonPrintables = 1;
+    } else {
+        options->printNonPrintables = 1;
+    }
+
     setOptions(argc, argv, options);
 
     int maxSize = argc - optind; 
@@ -63,7 +69,7 @@ void
 setOptions(int argc, char **argv, struct OPT *options) {
     int opt;
 
-    while((opt = getopt(argc, argv, "AailRdStcnufFr")) != -1) {
+    while((opt = getopt(argc, argv, "AailRdStcnufFrqw")) != -1) {
         switch (opt) {
         case 'A':
             options->includeHiddenFiles = 1;
@@ -115,6 +121,13 @@ setOptions(int argc, char **argv, struct OPT *options) {
         case 'r':
             options->reverseOrder = 1;
             break;
+        case 'q':
+            options->printNonPrintables = 0;
+            options->replaceNonPrintables = 1;
+            break;
+        case 'w':
+            options->replaceNonPrintables = 0;
+            options->printNonPrintables = 1;
         case '?':
             fprintf(stderr, "Invalid Parameter");
             break;
@@ -305,6 +318,9 @@ printInformation(struct OPT *options, FTSENT *node, struct maxsize max) {
         appendType(node, &el);
     }
 
+    if (options->replaceNonPrintables)
+        checkPrintableCharacters(&el);
+    
     if (generateElement(&el, options, node) == 0) {
         printLine(el, max);
     } else {
@@ -315,10 +331,25 @@ printInformation(struct OPT *options, FTSENT *node, struct maxsize max) {
 }
 
 void
+checkPrintableCharacters(struct elements *el) {
+    for (unsigned int i = 0; i < strlen(el->name); i++) {
+        if (!isprint(el->name[i])) {
+            el->name[i] = '?';
+        } 
+    }
+}
+
+/**
+ * If the F optional parameter is specified then this function is called.
+ * The F optional parameter requires the ls function to append the file name
+ * with special characters based on the type of the file
+ * 
+ **/
+void
 appendType(FTSENT *node, struct elements *el) {
     char newName[strlen(el->name) + 2];
     newName[0]='\0';
-    strcat(newName, node->fts_name);
+    strcat(newName, el->name);
 
     if (S_ISDIR(node->fts_statp->st_mode)) {
         strcat(newName, "/\0");
@@ -455,6 +486,12 @@ shouldPrint(struct OPT *options, FTSENT *node) {
     return 0;
 }
 
+/**
+ * Generates the element structure based on the options specified.
+ * The element struct is passed onto the print functions to print the 
+ * elements that have been set by this function.
+ * 
+ **/
 int
 generateElement(struct elements *el, struct OPT *options, FTSENT *ftsent) {
     struct passwd *userInfo;
