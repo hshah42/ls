@@ -42,12 +42,16 @@ main(int argc, char **argv) {
         }
 
         int dirSize = allocateFile(maxSize, argc, argv, options, directories);
-        
-        if (dirSize > 0) {
-            if((argc - optind) == 1) {
-                readDir(directories, options, 0, 0, dirSize);
-            } else {
-                readDir(directories, options, 1, 0, dirSize);
+
+        if (dirSize > 0 && options->listDirectories) {
+            readDir(directories, options, 0, 1, dirSize);
+        } else {
+            if (dirSize > 0) {
+                if((argc - optind) == 1) {
+                    readDir(directories, options, 0, 0, dirSize);
+                } else {
+                    readDir(directories, options, 1, 0, dirSize);
+                }
             }
         }
 
@@ -175,7 +179,7 @@ readDir(char **files, struct OPT *options,
     if (onFiles) {
         preformLsOnfiles(fts, options, fileCount);
     } else {
-        performLs(fts, options, isDirnameRequired);    
+        performLs(fts, options, isDirnameRequired);
     }
     
     (void) fts_close(fts);
@@ -313,24 +317,28 @@ int
 preformLsOnfiles (FTS *fts, struct OPT *options, int fileCount) {
     struct maxsize max = getDefaultMaxSizeStruct();
     FTSENT *ftsent;
-    FTSENT* entries[fileCount + 1];
+    FTSENT entries[fileCount + 1];
     int index = 0;
 
     while ((ftsent = fts_read(fts)) != NULL) {
         if (ftsent->fts_level > 0) {
             fts_set(fts, ftsent, FTS_SKIP);
             continue;
+        } else if (ftsent->fts_info == FTS_DP) {
+            continue;
         }
-        entries[index] = ftsent;
-        index++;
-    }
 
+        entries[index] = *ftsent;
+        index++;
+        //printInformation(options, ftsent, max);
+    }
+   
     for (int i = 0; i < fileCount ;i++) {
-        max = generateMaxSizeStruct(entries[i], max);
+        max = generateMaxSizeStruct(&entries[i], max);
     }
 
     for (int i = 0; i < fileCount; i++) {
-        printInformation(options, entries[i], max);
+        printInformation(options, &entries[i], max);
     }
 
     return 0;
@@ -625,8 +633,13 @@ allocateFile(int maxSize, int argc, char **argv,
             directories[index] = argv[i];
             index++;
         } else {
-            files[*fileIndex] = argv[i];
-            (*fileIndex)++;
+            if (options->listDirectories) {
+                directories[index] = argv[i];
+                index++;
+            } else {
+                files[*fileIndex] = argv[i];
+                (*fileIndex)++;
+            }
         }
     }
 
