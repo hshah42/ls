@@ -45,8 +45,13 @@ main(int argc, char **argv) {
         //     fts_set(fts, ftsent, FTS_SKIP);
         //     continue;
         // }
-        printf("file %s \n", ftsent->fts_name);
+        //printf("file %s \n", ftsent->fts_name);
+        if (ftsent->fts_level > 1) {
+            fts_set(fts, ftsent, FTS_SKIP);
+            continue;
+        }
         file_ls(fts, 0, shouldPrint);
+
         //fprintf(stdout, "innnnnn %lld %s\n", ftsent->fts_statp->st_size,ftsent->fts_name);
     }
     
@@ -73,6 +78,10 @@ void file_ls(FTS* file_system, int* flags, int *shouldPrint)
     //     fprintf(stdout, "%s: \n", node->fts_parent->fts_path);
     // }
     
+    if (node->fts_level > 1) {
+        return;
+    }
+
     FTSENT* directory = node->fts_parent;
     
     while (node != NULL)
@@ -82,9 +91,7 @@ void file_ls(FTS* file_system, int* flags, int *shouldPrint)
         // long a = node->fts_statp->st_size;
         // printf("%d \n", a);
         if(*shouldPrint)
-            printf("%s %s\n", node->fts_path, node->fts_name);
-        else
-            printf("get size \n");
+            printf("%s %d\n", node->fts_name, node->fts_statp->st_blocks);
         
         node = node->fts_link;
         shouldPrintLine = 1;

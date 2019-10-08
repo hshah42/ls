@@ -132,6 +132,7 @@ setOptions(int argc, char **argv, struct OPT *options) {
         case 'w':
             options->replaceNonPrintables = 0;
             options->printNonPrintables = 1;
+            break;
         case '?':
             fprintf(stderr, "Invalid Parameter");
             break;
@@ -327,19 +328,18 @@ preformLsOnfiles (FTS *fts, struct OPT *options, int fileCount) {
         } else if (ftsent->fts_info == FTS_DP) {
             continue;
         }
-
-        entries[index] = *ftsent;
-        index++;
-        //printInformation(options, ftsent, max);
+        printInformation(options, ftsent, max);
+        // entries[index] = *ftsent;
+        // index++;
     }
    
-    for (int i = 0; i < fileCount ;i++) {
-        max = generateMaxSizeStruct(&entries[i], max);
-    }
+    // for (int i = 0; i < fileCount ;i++) {
+    //     max = generateMaxSizeStruct(&entries[i], max);
+    // }
 
-    for (int i = 0; i < fileCount; i++) {
-        printInformation(options, &entries[i], max);
-    }
+    // for (int i = 0; i < fileCount; i++) {
+    //     printInformation(options, &entries[i], max);
+    // }
 
     return 0;
 }
@@ -420,7 +420,7 @@ addLinkName(FTSENT *node,  struct elements *el) {
     char linkname[PATH_MAX];
     char pathname[node->fts_namelen + node->fts_pathlen + 1];
     pathname[0]='\0';
-    strcat(pathname, node->fts_path);
+    strcat(pathname, node->fts_accpath);
     
     if (S_ISDIR(node->fts_parent->fts_statp->st_mode)) {
         strcat(pathname, node->fts_name);  
@@ -431,7 +431,6 @@ addLinkName(FTSENT *node,  struct elements *el) {
         printError(strerror(errno));
         return 1;
     }
-
     linkname[len] = '\0';
     char fullLink[strlen(linkname) + strlen(node->fts_name) + 1];
     fullLink[0] = '\0';
