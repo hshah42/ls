@@ -32,6 +32,7 @@ struct OPT
     int isHumanReadableSize;
     long blocksize;
     int printBlockSize;
+    int printBlockSizeInK;
 };
 
 struct output

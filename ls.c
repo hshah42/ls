@@ -73,7 +73,7 @@ void
 setOptions(int argc, char **argv, struct OPT *options) {
     int opt;
 
-    while((opt = getopt(argc, argv, "AailRdStcnufFrqwhs")) != -1) {
+    while((opt = getopt(argc, argv, "AailRdStcnufFrqwhsk")) != -1) {
         switch (opt) {
         case 'A':
             options->includeHiddenFiles = 1;
@@ -135,9 +135,14 @@ setOptions(int argc, char **argv, struct OPT *options) {
             break;
         case 'h':
             options->isHumanReadableSize = 1;
+            options->printBlockSizeInK = 0;
             break;
         case 's':
             options->printBlockSize = 1;
+            break;
+        case 'k':
+            options->printBlockSizeInK = 1;
+            options->isHumanReadableSize = 0;
             break;
         case '?':
             fprintf(stderr, "Invalid Parameter");
@@ -544,8 +549,14 @@ generateElement(struct elements *el, struct OPT *options, FTSENT *ftsent) {
     char *permission = malloc(10);
 
     if (options->printBlockSize) {
-        el->blockSize = convertToEnvironmentBlocksize(ftsent->fts_statp->st_blocks, 
+        if (options->printBlockSizeInK) {
+            el->blockSize = convertToEnvironmentBlocksize(ftsent->fts_statp->st_blocks, 
+                                                          1024);
+        } else {
+            el->blockSize = convertToEnvironmentBlocksize(ftsent->fts_statp->st_blocks, 
                                                       options->blocksize);
+        }
+        
         el->rawBlockSize = ftsent->fts_statp->st_blocks * 512;
         el->showBlockSize = 1;
     }
