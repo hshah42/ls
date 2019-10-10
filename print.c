@@ -35,9 +35,16 @@ printLine(struct elements el, struct maxsize max) {
     }
 
     if(el.size >= 0 && (el.hasSize)) {
-        long whitespaces = max.size - getNumberOfDigits(el.size);
-        addWhiteSpaces(whitespaces);
-        fprintf(stdout, "%ld ", el.size);
+        if (el.useHumanReadable) {
+            char *print = convertByteToHumanReadable(el.size);
+            long whitespaces = 4 - strlen(print);
+            addWhiteSpaces(whitespaces);
+            fprintf(stdout, "%s ", print);
+        } else {
+            long whitespaces = max.size - getNumberOfDigits(el.size);
+            addWhiteSpaces(whitespaces);
+            fprintf(stdout, "%ld ", el.size);
+        }
     }
 
     if(el.time > 0) {
@@ -100,6 +107,7 @@ getDefaultStruct() {
     el.size = defaultSize;
     el.inode = defaultInode;
     el.hasSize = defaultVal;
+    el.useHumanReadable = defaultVal;
 
     return el;
 }
@@ -167,4 +175,36 @@ getNumberOfDigits(long number) {
     }
 
     return count;
+}
+
+char *
+convertByteToHumanReadable(size_t bytes) {
+    char size[] = {'B', 'K', 'M', 'T', 'P'};
+    char *humanReadableSize = malloc(getNumberOfDigits(bytes) + 2);
+    
+    if(humanReadableSize == NULL) {
+        return NULL;
+    }
+
+    humanReadableSize[0] = '\0';
+    float result = bytes;
+    char postFix = 'B';
+
+    if (bytes >= 1024) {
+        int power = (int) (log(bytes) / log(1024));
+        result = bytes / pow(1024, power);
+        postFix = size[power];
+    } else if (bytes < 1024 && bytes >= 1000) {
+        int power = (int) (log(bytes) / log(1000));
+        result = bytes / pow(1000, power);
+        postFix = size[power];
+    }
+
+    if (getNumberOfDigits(result) == 1 && postFix != 'B') {
+        sprintf(humanReadableSize, "%.1f%c", result, postFix);
+    } else {
+        sprintf(humanReadableSize, "%.0f%c", result, postFix);
+    }
+    
+    return humanReadableSize;
 }

@@ -11,6 +11,7 @@ struct elements {
     off_t    size;
     ino_t    inode;
     int      hasSize;
+    int      useHumanReadable;
 };
 
 struct maxsize
@@ -34,3 +35,4 @@ void addToLine(struct elements el);
 struct maxsize getDefaultMaxSizeStruct();
 unsigned long getNumberOfDigits(long number);
 void addWhiteSpaces(long number);
+char* convertByteToHumanReadable(size_t bytes);

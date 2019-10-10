@@ -2,7 +2,6 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <errno.h>
-#include <stdlib.h>
 #include <pwd.h>
 #include <grp.h>
 #include <limits.h>
@@ -30,6 +29,7 @@ struct OPT
     int reverseOrder;
     int replaceNonPrintables;
     int printNonPrintables;
+    int isHumanReadableSize;
 };
 
 struct output
@@ -38,7 +38,7 @@ struct output
     struct elements el[];
 };
 
-int readDir(char **files, struct OPT *options, int isDirnameRequired, int onFiles, int fileCount);
+int readDir(char **files, struct OPT *options, int isDirnameRequired, int onFiles);
 void setOptions(int argc, char **argv, struct OPT *options);
 void initOptions(struct OPT *options);
 int allocateFile(int maxSize, int argc, char **argv, struct OPT *options, char **files);
@@ -53,4 +53,5 @@ sort getSortType(struct OPT *options);
 int printInformation(struct OPT *options, FTSENT *node, struct maxsize max);
 void appendType(FTSENT *node, struct elements *el);
 void checkPrintableCharacters(struct elements *el);
-int preformLsOnfiles (FTS *fts, struct OPT *options, int fileCount);
+int preformLsOnfiles (FTS *fts, struct OPT *options);
+FTSENT deepCopyFTSENT(FTSENT *fts, int includeParent);

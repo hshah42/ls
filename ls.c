@@ -29,7 +29,7 @@ main(int argc, char **argv) {
     if(optind == argc) {
         char **dir = malloc(2);
         dir[0] = "./";
-        readDir(dir, options, 0, 0, 1);
+        readDir(dir, options, 0, 0);
         free(dir);
     }
     else
@@ -44,13 +44,13 @@ main(int argc, char **argv) {
         int dirSize = allocateFile(maxSize, argc, argv, options, directories);
 
         if (dirSize > 0 && options->listDirectories) {
-            readDir(directories, options, 0, 1, dirSize);
+            readDir(directories, options, 0, 1);
         } else {
             if (dirSize > 0) {
                 if((argc - optind) == 1) {
-                    readDir(directories, options, 0, 0, dirSize);
+                    readDir(directories, options, 0, 0);
                 } else {
-                    readDir(directories, options, 1, 0, dirSize);
+                    readDir(directories, options, 1, 0);
                 }
             }
         }
@@ -73,7 +73,7 @@ void
 setOptions(int argc, char **argv, struct OPT *options) {
     int opt;
 
-    while((opt = getopt(argc, argv, "AailRdStcnufFrqw")) != -1) {
+    while((opt = getopt(argc, argv, "AailRdStcnufFrqwh")) != -1) {
         switch (opt) {
         case 'A':
             options->includeHiddenFiles = 1;
@@ -133,6 +133,9 @@ setOptions(int argc, char **argv, struct OPT *options) {
             options->replaceNonPrintables = 0;
             options->printNonPrintables = 1;
             break;
+        case 'h':
+            options->isHumanReadableSize = 1;
+            break;
         case '?':
             fprintf(stderr, "Invalid Parameter");
             break;
@@ -162,7 +165,7 @@ resetSortOptions(struct OPT *options) {
  **/
 int
 readDir(char **files, struct OPT *options, 
-        int isDirnameRequired, int onFiles, int fileCount) {
+        int isDirnameRequired, int onFiles) {
     FTS *fts;
     int flags = FTS_PHYSICAL | FTS_NOCHDIR;
 
@@ -178,7 +181,7 @@ readDir(char **files, struct OPT *options,
     }
 
     if (onFiles) {
-        preformLsOnfiles(fts, options, fileCount);
+        preformLsOnfiles(fts, options);
     } else {
         performLs(fts, options, isDirnameRequired);
     }
@@ -315,11 +318,9 @@ performLs(FTS *fts, struct OPT *options, int isDirnameRequired) {
 }
 
 int
-preformLsOnfiles (FTS *fts, struct OPT *options, int fileCount) {
+preformLsOnfiles(FTS *fts, struct OPT *options) {
     struct maxsize max = getDefaultMaxSizeStruct();
     FTSENT *ftsent;
-    FTSENT entries[fileCount + 1];
-    int index = 0;
 
     while ((ftsent = fts_read(fts)) != NULL) {
         if (ftsent->fts_level > 0) {
@@ -329,17 +330,7 @@ preformLsOnfiles (FTS *fts, struct OPT *options, int fileCount) {
             continue;
         }
         printInformation(options, ftsent, max);
-        // entries[index] = *ftsent;
-        // index++;
     }
-   
-    // for (int i = 0; i < fileCount ;i++) {
-    //     max = generateMaxSizeStruct(&entries[i], max);
-    // }
-
-    // for (int i = 0; i < fileCount; i++) {
-    //     printInformation(options, &entries[i], max);
-    // }
 
     return 0;
 }
@@ -592,6 +583,10 @@ generateElement(struct elements *el, struct OPT *options, FTSENT *ftsent) {
             el->time = ftsent->fts_statp->st_mtimespec.tv_sec;
         }
         
+        if (options->isHumanReadableSize) {
+            el->useHumanReadable = 1;
+        }
+
         strmode(ftsent->fts_statp->st_mode, permission);
         el->strmode = strdup(permission);
     }
@@ -646,7 +641,7 @@ allocateFile(int maxSize, int argc, char **argv,
     
     if (*fileIndex > 0) {
         files[*fileIndex] = '\0';
-        readDir(files, options, 0, 1, *fileIndex);
+        readDir(files, options, 0, 1);
     }
 
     return index;
