@@ -205,6 +205,9 @@ convertByteToHumanReadable(size_t bytes) {
     } else {
         sprintf(humanReadableSize, "%.0f%c", result, postFix);
     }
+
+    char *resultString = strdup(humanReadableSize);
+    free(humanReadableSize);
     
-    return humanReadableSize;
+    return resultString;
 }
