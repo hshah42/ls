@@ -73,7 +73,7 @@ void
 setOptions(int argc, char **argv, struct OPT *options) {
     int opt;
 
-    while((opt = getopt(argc, argv, "AailRdStcnufFrqwh")) != -1) {
+    while((opt = getopt(argc, argv, "AailRdStcnufFrqwhs")) != -1) {
         switch (opt) {
         case 'A':
             options->includeHiddenFiles = 1;
@@ -135,6 +135,9 @@ setOptions(int argc, char **argv, struct OPT *options) {
             break;
         case 'h':
             options->isHumanReadableSize = 1;
+            break;
+        case 's':
+            options->printBlockSize = 1;
             break;
         case '?':
             fprintf(stderr, "Invalid Parameter");
@@ -262,7 +265,7 @@ performLs(FTS *fts, struct OPT *options, int isDirnameRequired) {
                 fts_set(fts, ftsent, FTS_SKIP);
                 continue;
             }
-            max = generateMaxSizeStruct(ftsent, max);
+            max = generateMaxSizeStruct(ftsent, options, max);
             printInformation(options, ftsent, max);
             continue;
         }
@@ -302,7 +305,7 @@ performLs(FTS *fts, struct OPT *options, int isDirnameRequired) {
                 }
             } else {
                 if (shouldPrint(options, node)) {
-                   max = generateMaxSizeStruct(node, max); 
+                   max = generateMaxSizeStruct(node, options, max); 
                 } else {
                     fts_set(fts, node, FTS_SKIP);
                 }
@@ -439,7 +442,7 @@ addLinkName(FTSENT *node,  struct elements *el) {
  * 
  **/
 struct maxsize
-generateMaxSizeStruct(FTSENT *node, struct maxsize max) {
+generateMaxSizeStruct(FTSENT *node, struct OPT *options, struct maxsize max) {
     struct passwd *userInfo;
     struct group *groupInfo;
 
@@ -481,6 +484,12 @@ generateMaxSizeStruct(FTSENT *node, struct maxsize max) {
 
     if (getNumberOfDigits(hardlinks) > max.hardlinks) {
         max.hardlinks = getNumberOfDigits(hardlinks);
+    }
+
+    long blocksize = convertToEnvironmentBlocksize(node->fts_statp->st_blocks, 
+                                                      options->blocksize);
+    if (getNumberOfDigits(blocksize) > max.blocksize) {
+        max.blocksize = getNumberOfDigits(blocksize);
     }
 
     return max;
@@ -533,6 +542,13 @@ generateElement(struct elements *el, struct OPT *options, FTSENT *ftsent) {
     struct passwd *userInfo;
     struct group *groupInfo;
     char *permission = malloc(10);
+
+    if (options->printBlockSize) {
+        el->blockSize = convertToEnvironmentBlocksize(ftsent->fts_statp->st_blocks, 
+                                                      options->blocksize);
+        el->rawBlockSize = ftsent->fts_statp->st_blocks * 512;
+        el->showBlockSize = 1;
+    }
 
     if (options->printInode) {
         el->inode = ftsent->fts_statp->st_ino;
@@ -599,6 +615,14 @@ generateElement(struct elements *el, struct OPT *options, FTSENT *ftsent) {
 int
 allocateFile(int maxSize, int argc, char **argv, 
                 struct OPT *options, char **directories) {
+    long blockSize = getBlockSize();
+
+    if (blockSize < 0) {
+        options->blocksize = 512;
+    } else {
+        options->blocksize = blockSize;
+    }
+    
     int initialErrorIndex=0, initialFileIndex=0;
     
     char *errors[maxSize]; 

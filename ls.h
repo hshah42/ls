@@ -30,6 +30,8 @@ struct OPT
     int replaceNonPrintables;
     int printNonPrintables;
     int isHumanReadableSize;
+    long blocksize;
+    int printBlockSize;
 };
 
 struct output
@@ -46,7 +48,7 @@ int generateElement(struct elements *el, struct OPT *options, FTSENT *ftsent);
 int performLs(FTS *fts, struct OPT *options, int isDirnameRequired);
 int shouldPrint(struct OPT *options, FTSENT *node);
 void postChildTraversal(int *shouldPrintContent, FTS *fts, FTSENT *directory);
-struct maxsize generateMaxSizeStruct(FTSENT *node, struct maxsize max);
+struct maxsize generateMaxSizeStruct(FTSENT *node, struct OPT *options, struct maxsize max);
 int addLinkName(FTSENT *node, struct elements *el);
 void resetSortOptions(struct OPT *options);
 sort getSortType(struct OPT *options);

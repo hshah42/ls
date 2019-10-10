@@ -6,35 +6,48 @@ void
 printLine(struct elements el, struct maxsize max) {
     struct tm *temp;
 
-    if(el.inode > 0) {
+    if (el.blockSize >= 0 && el.showBlockSize) {
+        if (el.useHumanReadable) {
+            char *print = convertByteToHumanReadable(el.rawBlockSize);
+            long whitespaces = 4 - strlen(print);
+            addWhiteSpaces(whitespaces);
+            fprintf(stdout, "%s ", print);
+        } else {
+            long whitespaces = max.blocksize - getNumberOfDigits(el.blockSize);
+            addWhiteSpaces(whitespaces);
+            fprintf(stdout, "%li ", el.blockSize);
+        }
+    }
+
+    if (el.inode > 0) {
         long whitespaces = max.inode - getNumberOfDigits(el.inode);
         addWhiteSpaces(whitespaces);
         fprintf(stdout, "%lu ", el.inode);
     }
     
-    if(el.strmode != NULL) {
+    if (el.strmode != NULL) {
         fprintf(stdout, "%s ", el.strmode);
     }
 
-    if(el.hardlinks > 0) {
+    if (el.hardlinks > 0) {
         long whitespaces = max.hardlinks - getNumberOfDigits(el.hardlinks);
         addWhiteSpaces(whitespaces);
         fprintf(stdout, "%hu ", el.hardlinks);
     }
 
-    if(el.owner != NULL) {
+    if (el.owner != NULL) {
         long whitespaces = max.owner - strlen(el.owner);
         fprintf(stdout, "%s  ", el.owner);
         addWhiteSpaces(whitespaces);
     }
 
-    if(el.group != NULL) {
+    if (el.group != NULL) {
         long whitespaces = max.owner - strlen(el.group);
         fprintf(stdout, "%s  ", el.group);
         addWhiteSpaces(whitespaces);
     }
 
-    if(el.size >= 0 && (el.hasSize)) {
+    if (el.size >= 0 && (el.hasSize)) {
         if (el.useHumanReadable) {
             char *print = convertByteToHumanReadable(el.size);
             long whitespaces = 4 - strlen(print);
@@ -47,7 +60,7 @@ printLine(struct elements el, struct maxsize max) {
         }
     }
 
-    if(el.time > 0) {
+    if (el.time > 0) {
         temp = localtime(&(el.time));
         fprintf(stdout, "%s ", monthNames[temp->tm_mon]);
         long whitespaces = 2 - getNumberOfDigits(temp->tm_mday);
@@ -68,7 +81,7 @@ printLine(struct elements el, struct maxsize max) {
         }
     }
 
-    if(el.name != NULL) {
+    if (el.name != NULL) {
         int whitespaces = max.name - strlen(el.name);
         fprintf(stdout, "%s ", el.name);
         addWhiteSpaces(whitespaces);
@@ -91,11 +104,13 @@ struct elements
 getDefaultStruct() {
     struct elements el;
     int defaultVal = 0;
+    long defaultLong = 0;
 
     time_t defaultTime = 0;
     ino_t defaultInode = 0;
     nlink_t defaultHardlink = 0;
     off_t defaultSize = 0;
+    blkcnt_t defaultRawBlockSize = 0;
 
     el.name = NULL;
     el.strmode = NULL;
@@ -108,6 +123,9 @@ getDefaultStruct() {
     el.inode = defaultInode;
     el.hasSize = defaultVal;
     el.useHumanReadable = defaultVal;
+    el.showBlockSize = defaultVal;
+    el.blockSize = defaultLong;
+    el.rawBlockSize = defaultRawBlockSize;
 
     return el;
 }
@@ -122,6 +140,7 @@ getDefaultMaxSizeStruct() {
     max.owner = 0;
     max.group = 0;
     max.size = 0;
+    max.blocksize = 0;
     
     return max;
 }
@@ -210,4 +229,54 @@ convertByteToHumanReadable(size_t bytes) {
     free(humanReadableSize);
     
     return resultString;
+}
+
+long
+getBlockSize() {
+    char *environmentValue = getenv("BLOCKSIZE");
+    
+    if (environmentValue == NULL) {
+        return 512;
+    }
+
+    long blockSize = 0;
+    long multiplier = 1024;
+
+    for (unsigned int i = 0; i < strlen(environmentValue); i++) {
+        char value = environmentValue[i];
+        if (isdigit(value)) {
+            blockSize = (blockSize * 10) + (long)(value - '0');
+        } else if (isalpha(value)) {
+            if (value == 'k' || value == 'K') {
+                blockSize *= multiplier;
+            } else if (value == 'm' || value == 'M') {
+                blockSize *= multiplier * multiplier;
+            } else if (value == 'g' || value == 'G') {
+                blockSize *= multiplier * multiplier * multiplier;
+            } else {
+                return -1;
+            }
+
+            if ((i + 1) != strlen(environmentValue)) {
+                return -1;
+            }
+        } else {
+            return -1;
+        }
+    }
+
+    if (blockSize < 512) {
+        return -2;
+    } else if (blockSize > (multiplier * multiplier * multiplier)) {
+        return -3;
+    }
+
+    return blockSize;
+}
+
+long
+convertToEnvironmentBlocksize(blkcnt_t blocks, long environmentBlocksize) {
+    float divisor = environmentBlocksize / 512;
+    long updatedBlocksize = (long) ceil(blocks / divisor);
+    return updatedBlocksize;
 }

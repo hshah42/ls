@@ -1,4 +1,5 @@
 #include "common.h"
+#include <ctype.h>
 
 struct elements {
     char     *name;
@@ -12,6 +13,9 @@ struct elements {
     ino_t    inode;
     int      hasSize;
     int      useHumanReadable;
+    int      showBlockSize;
+    long     blockSize;
+    blkcnt_t rawBlockSize;        
 };
 
 struct maxsize
@@ -22,6 +26,7 @@ struct maxsize
     unsigned long hardlinks;
     unsigned long size;
     unsigned long inode;
+    unsigned long blocksize;
 };
 
 void printLine(struct elements el, struct maxsize max);
@@ -36,3 +41,5 @@ struct maxsize getDefaultMaxSizeStruct();
 unsigned long getNumberOfDigits(long number);
 void addWhiteSpaces(long number);
 char* convertByteToHumanReadable(size_t bytes);
+long convertToEnvironmentBlocksize(blkcnt_t blocks, long environmentBlocksize);
+long getBlockSize();
