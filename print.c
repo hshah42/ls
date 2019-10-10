@@ -6,6 +6,12 @@ void
 printLine(struct elements el, struct maxsize max) {
     struct tm *temp;
 
+    if (el.inode > 0) {
+        long whitespaces = max.inode - getNumberOfDigits(el.inode);
+        addWhiteSpaces(whitespaces);
+        fprintf(stdout, "%lu ", el.inode);
+    }
+
     if (el.blockSize >= 0 && el.showBlockSize) {
         if (el.useHumanReadable) {
             char *print = convertByteToHumanReadable(el.rawBlockSize);
@@ -17,12 +23,6 @@ printLine(struct elements el, struct maxsize max) {
             addWhiteSpaces(whitespaces);
             fprintf(stdout, "%li ", el.blockSize);
         }
-    }
-
-    if (el.inode > 0) {
-        long whitespaces = max.inode - getNumberOfDigits(el.inode);
-        addWhiteSpaces(whitespaces);
-        fprintf(stdout, "%lu ", el.inode);
     }
     
     if (el.strmode != NULL) {
