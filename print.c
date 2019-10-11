@@ -133,6 +133,7 @@ getDefaultStruct() {
 struct maxsize
 getDefaultMaxSizeStruct() {
     struct maxsize max;
+    blkcnt_t defaultRawBlockSize = 0;
 
     max.name = 0;
     max.inode = 0;
@@ -141,6 +142,7 @@ getDefaultMaxSizeStruct() {
     max.group = 0;
     max.size = 0;
     max.blocksize = 0;
+    max.totalBlockSize = defaultRawBlockSize;
     
     return max;
 }

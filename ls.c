@@ -266,16 +266,6 @@ performLs(FTS *fts, struct OPT *options, int isDirnameRequired) {
     FTSENT *ftsent;
 
     while ((ftsent = fts_read(fts)) != NULL) {
-        if (options->listDirectories) {
-            if (ftsent->fts_level > 0 || ftsent->fts_info == FTS_DP) {
-                fts_set(fts, ftsent, FTS_SKIP);
-                continue;
-            }
-            max = generateMaxSizeStruct(ftsent, options, max);
-            printInformation(options, ftsent, max);
-            continue;
-        }
-
         FTSENT* node = fts_children(fts, 0);
 
         if (ftsent->fts_level > 1 && !(options->recurse)) {
@@ -293,6 +283,17 @@ performLs(FTS *fts, struct OPT *options, int isDirnameRequired) {
                 printDirectory(node->fts_parent->fts_path);
             } else if (options->recurse) {
                 isDirnameRequired = 1;
+            }
+
+            if (options->printStat || options->printBlockSize) {
+                if (options->isHumanReadableSize) {
+                    char *output = convertByteToHumanReadable(max.totalBlockSize * 512);
+                    fprintf(stdout, "total: %s \n", output);
+                } else {
+                    long totalBlocks = convertToEnvironmentBlocksize(max.totalBlockSize, 
+                                                                     options->blocksize);
+                    fprintf(stdout, "total: %lu \n", totalBlocks);
+                }
             }
         }
         else
@@ -498,6 +499,8 @@ generateMaxSizeStruct(FTSENT *node, struct OPT *options, struct maxsize max) {
         max.blocksize = getNumberOfDigits(blocksize);
     }
 
+    max.totalBlockSize += node->fts_statp->st_blocks;
+
     return max;
 }
 
@@ -550,14 +553,8 @@ generateElement(struct elements *el, struct OPT *options, FTSENT *ftsent) {
     char *permission = malloc(10);
 
     if (options->printBlockSize) {
-        if (options->printBlockSizeInK) {
-            el->blockSize = convertToEnvironmentBlocksize(ftsent->fts_statp->st_blocks, 
-                                                          1024);
-        } else {
-            el->blockSize = convertToEnvironmentBlocksize(ftsent->fts_statp->st_blocks, 
+        el->blockSize = convertToEnvironmentBlocksize(ftsent->fts_statp->st_blocks, 
                                                       options->blocksize);
-        }
-        
         el->rawBlockSize = ftsent->fts_statp->st_blocks * 512;
         el->showBlockSize = 1;
     }
@@ -677,6 +674,11 @@ allocateFile(int maxSize, int argc, char **argv,
 
 void
 checkBlockSize(struct OPT *options) {
+    if (options->printBlockSizeInK) {
+        options->blocksize = 1024;
+        return;
+    }
+
     long blockSize = getBlockSize();
 
     if (blockSize < 0) {

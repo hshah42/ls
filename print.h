@@ -27,6 +27,7 @@ struct maxsize
     unsigned long size;
     unsigned long inode;
     unsigned long blocksize;
+    blkcnt_t totalBlockSize;
 };
 
 void printLine(struct elements el, struct maxsize max);
