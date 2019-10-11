@@ -266,12 +266,11 @@ performLs(FTS *fts, struct OPT *options, int isDirnameRequired) {
     FTSENT *ftsent;
 
     while ((ftsent = fts_read(fts)) != NULL) {
-        FTSENT* node = fts_children(fts, 0);
-
-        if (ftsent->fts_level > 1 && !(options->recurse)) {
-            fts_set(fts, ftsent, FTS_SKIP);
+        if (!shouldPrint(options, ftsent) || (ftsent->fts_level > 1 && !(options->recurse))) {
             continue;
         }
+
+        FTSENT* node = fts_children(fts, 0);
 
         if (node == NULL || (node->fts_level > 1 && !(options->recurse))) {
             continue;
