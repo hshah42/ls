@@ -42,7 +42,7 @@ printLine(struct elements el, struct maxsize max) {
     }
 
     if (el.group != NULL) {
-        long whitespaces = max.owner - strlen(el.group);
+        long whitespaces = max.group - strlen(el.group);
         fprintf(stdout, "%s  ", el.group);
         addWhiteSpaces(whitespaces);
     }

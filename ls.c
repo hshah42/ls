@@ -30,7 +30,12 @@ main(int argc, char **argv) {
     if(optind == argc) {
         char **dir = malloc(2);
         dir[0] = "./";
-        readDir(dir, options, 0, 0);
+        if (options->listDirectories) {
+            readDir(dir, options, 0, 1);
+        } else {
+            readDir(dir, options, 0, 0);
+        }
+        
         free(dir);
     }
     else
@@ -266,7 +271,7 @@ performLs(FTS *fts, struct OPT *options, int isDirnameRequired) {
     FTSENT *ftsent;
 
     while ((ftsent = fts_read(fts)) != NULL) {
-        if (!shouldPrint(options, ftsent)) {
+        if (!shouldPrint(options, ftsent) && ftsent->fts_level != 0) {
             continue;
         }
 
