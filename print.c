@@ -97,7 +97,7 @@ addToLine(struct elements el) {
 
 void
 printError(char *error) {
-    fprintf(stderr, "%s\n", error);
+    fprintf(stderr, "%s: %s\n", getprogname(), error);
 }
 
 struct elements

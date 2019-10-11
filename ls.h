@@ -58,3 +58,4 @@ void appendType(FTSENT *node, struct elements *el);
 void checkPrintableCharacters(struct elements *el);
 int preformLsOnfiles (FTS *fts, struct OPT *options);
 FTSENT deepCopyFTSENT(FTSENT *fts, int includeParent);
+void checkBlockSize(struct OPT *options);

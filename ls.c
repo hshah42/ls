@@ -23,6 +23,7 @@ main(int argc, char **argv) {
     }
 
     setOptions(argc, argv, options);
+    checkBlockSize(options);
 
     int maxSize = argc - optind; 
 
@@ -626,14 +627,6 @@ generateElement(struct elements *el, struct OPT *options, FTSENT *ftsent) {
 int
 allocateFile(int maxSize, int argc, char **argv, 
                 struct OPT *options, char **directories) {
-    long blockSize = getBlockSize();
-
-    if (blockSize < 0) {
-        options->blocksize = 512;
-    } else {
-        options->blocksize = blockSize;
-    }
-    
     int initialErrorIndex=0, initialFileIndex=0;
     
     char *errors[maxSize]; 
@@ -680,4 +673,33 @@ allocateFile(int maxSize, int argc, char **argv,
     }
 
     return index;
+}
+
+void
+checkBlockSize(struct OPT *options) {
+    long blockSize = getBlockSize();
+
+    if (blockSize < 0) {
+        char *env = getenv("BLOCKSIZE");
+        const char *programName = getprogname();
+
+        if (blockSize == -1) {
+            options->blocksize = 512;
+            fprintf(stderr, "%s: %s: unknown blocksize \n", programName, env);
+            fprintf(stderr, "%s: maximum blocksize is 1G \n", programName);
+            fprintf(stderr, "%s: %s: minimum blocksize is 512 \n", programName, env);
+        } else if (blockSize == -2) {
+            options->blocksize = 512;
+            fprintf(stderr, "%s: %s: minimum blocksize is 512 \n", programName, env);
+        } else if (blockSize == -3) {
+            options->blocksize = 1024 * 1024 *1024;
+            fprintf(stderr, "%s: maximum blocksize is 1G \n", programName);
+        } else {
+             options->blocksize = 512;
+        }
+
+    } else {
+        options->blocksize = blockSize;
+    }
+    
 }
