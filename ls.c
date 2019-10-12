@@ -271,17 +271,21 @@ performLs(FTS *fts, struct OPT *options, int isDirnameRequired) {
     FTSENT *ftsent;
 
     while ((ftsent = fts_read(fts)) != NULL) {
+        // Ignore the dirs which should not be printed 
+        // and are not the root directory
         if (!shouldPrint(options, ftsent) && ftsent->fts_level != 0) {
             continue;
         }
 
         FTSENT* node = fts_children(fts, 0);
 
+        // If option is not recurse, ignore the files with level > 1
         if (ftsent->fts_level > 1 && !(options->recurse)) {
             fts_set(fts, ftsent, FTS_SKIP);
             continue;
         }
 
+        // If ftsent has no children then continue with traversal
         if (node == NULL || (node->fts_level > 1 && !(options->recurse))) {
             if (isDirnameRequired && ftsent->fts_level == 0 && ftsent->fts_info == FTS_D) {
                 printNewLine();
@@ -340,6 +344,10 @@ performLs(FTS *fts, struct OPT *options, int isDirnameRequired) {
     return 0;
 }
 
+/**
+ * Perform ls on files itself that are passed as parameters rather than
+ * children of the files.
+ **/
 int
 preformLsOnfiles(FTS *fts, struct OPT *options) {
     struct maxsize max = getDefaultMaxSizeStruct();
@@ -358,16 +366,28 @@ preformLsOnfiles(FTS *fts, struct OPT *options) {
     return 0;
 }
 
+/**
+ * Print information related to the file that is being
+ * traversed. It calls generate element, which will 
+ * encapsulate all the information related to the printing of line.
+ **/
 int
 printInformation(struct OPT *options, FTSENT *node, struct maxsize max) {
     struct elements el = getDefaultStruct();
+
+    // If directory and if the node is of level 0 which means that
+    // the directory was passed in the argumets, then we need to print the path
+    // and in other cases we print the file name
+     if (options->listDirectories || node->fts_level == 0) {
+             el.name = node->fts_path;
+    } else {
+             el.name = node->fts_name;
+    }
                     
     if (S_ISLNK(node->fts_statp->st_mode) && options->printStat) {
         if (addLinkName(node, &el) != 0) {
             return 1;
         }
-    } else {
-        el.name = node->fts_name; 
     }
 
     if (options->appendFileType) {
@@ -434,6 +454,8 @@ addLinkName(FTSENT *node,  struct elements *el) {
     char linkname[PATH_MAX];
     char pathname[node->fts_namelen + node->fts_pathlen + 1];
     pathname[0]='\0';
+    // Using path because readlink requires full path or else
+    // readlink will not be able to find the file
     strcat(pathname, node->fts_accpath);
     
     if (S_ISDIR(node->fts_parent->fts_statp->st_mode)) {
@@ -446,9 +468,9 @@ addLinkName(FTSENT *node,  struct elements *el) {
         return 1;
     }
     linkname[len] = '\0';
-    char fullLink[strlen(linkname) + strlen(node->fts_name) + 1];
+    char fullLink[strlen(linkname) + strlen(el->name) + 1];
     fullLink[0] = '\0';
-    strcat(fullLink, node->fts_name);
+    strcat(fullLink, el->name);
     strcat(fullLink, " -> ");
     strcat(fullLink, linkname);
     el->name = strdup(fullLink);
@@ -536,6 +558,8 @@ postChildTraversal(int *shouldPrintContent, FTS *fts, FTSENT *directory) {
  * Depends on -A -a flag to determine when to include ., .. and 
  * hidden files.
  * 
+ * If level is 0 which means it was passed in the argument and hence
+ * it needs to be printed
  **/
 int
 shouldPrint(struct OPT *options, FTSENT *node) {
