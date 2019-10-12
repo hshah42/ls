@@ -42,7 +42,7 @@ struct output
 };
 
 int readDir(char **files, struct OPT *options, int isDirnameRequired, int onFiles);
-void setOptions(int argc, char **argv, struct OPT *options);
+int setOptions(int argc, char **argv, struct OPT *options);
 void initOptions(struct OPT *options);
 int allocateFile(int maxSize, int argc, char **argv, struct OPT *options, char **files);
 int generateElement(struct elements *el, struct OPT *options, FTSENT *ftsent);

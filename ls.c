@@ -22,7 +22,10 @@ main(int argc, char **argv) {
         options->printNonPrintables = 1;
     }
 
-    setOptions(argc, argv, options);
+    if (setOptions(argc, argv, options) != 0) {
+        return 1;
+    }
+
     checkBlockSize(options);
 
     int maxSize = argc - optind; 
@@ -75,7 +78,7 @@ main(int argc, char **argv) {
  * the flow of the program.
  * 
  **/
-void
+int
 setOptions(int argc, char **argv, struct OPT *options) {
     int opt;
 
@@ -151,12 +154,16 @@ setOptions(int argc, char **argv, struct OPT *options) {
             options->isHumanReadableSize = 0;
             break;
         case '?':
-            fprintf(stderr, "Invalid Parameter");
+            fprintf(stderr, "usage: %s [-AailRdStcnufFrqwhsk] [file ...] \n", 
+                    getprogname());
+            return 1;
             break;
         default:
             break;
         }
     }
+
+    return 0;
 }
 
 /**
@@ -205,6 +212,10 @@ readDir(char **files, struct OPT *options,
     return 0;
 }
 
+/**
+ * Determine the type of sorting required based on the options
+ * 
+ **/
 sort
 getSortType(struct OPT *options) {
     if (options->keepUnsorted) {
@@ -287,7 +298,8 @@ performLs(FTS *fts, struct OPT *options, int isDirnameRequired) {
 
         // If ftsent has no children then continue with traversal
         if (node == NULL || (node->fts_level > 1 && !(options->recurse))) {
-            if (isDirnameRequired && ftsent->fts_level == 0 && ftsent->fts_info == FTS_D) {
+            if ((options->recurse || (isDirnameRequired && ftsent->fts_level == 0)) 
+                    && ftsent->fts_info == FTS_D) {
                 printNewLine();
                 printDirectory(ftsent->fts_path);
             }
@@ -492,7 +504,8 @@ generateMaxSizeStruct(FTSENT *node, struct OPT *options, struct maxsize max) {
         max.name = node->fts_namelen;
     }
 
-    if ((userInfo = getpwuid(node->fts_statp->st_uid)) == NULL) {
+    if (options->printOwnerAndGroupID || 
+        (userInfo = getpwuid(node->fts_statp->st_uid)) == NULL) {
         if (getNumberOfDigits(node->fts_statp->st_uid) > max.owner) {
             max.owner = getNumberOfDigits(node->fts_statp->st_uid);
         }
@@ -502,7 +515,8 @@ generateMaxSizeStruct(FTSENT *node, struct OPT *options, struct maxsize max) {
         }
     }
 
-    if ((groupInfo = getgrgid(node->fts_statp->st_gid)) == NULL) {
+    if (options->printOwnerAndGroupID || 
+        (groupInfo = getgrgid(node->fts_statp->st_gid)) == NULL) {
         if (getNumberOfDigits(node->fts_statp->st_gid) > max.group) {
             max.owner = getNumberOfDigits(node->fts_statp->st_gid);
         }
