@@ -539,6 +539,10 @@ postChildTraversal(int *shouldPrintContent, FTS *fts, FTSENT *directory) {
  **/
 int
 shouldPrint(struct OPT *options, FTSENT *node) {
+    if (node->fts_level == 0) {
+        return 0;
+    }
+
     if (options->listAllFlag) {
         return 1;
     } else {
@@ -574,6 +578,11 @@ generateElement(struct elements *el, struct OPT *options, FTSENT *ftsent) {
 
     if (options->printInode) {
         el->inode = ftsent->fts_statp->st_ino;
+    }
+
+
+    if (options->isHumanReadableSize) {
+        el->useHumanReadable = 1;
     }
 
     if (options->printStat) {
@@ -620,10 +629,6 @@ generateElement(struct elements *el, struct OPT *options, FTSENT *ftsent) {
         } else {
             el->time = ftsent->fts_statp->st_mtimespec.tv_sec;
         }
-        
-        if (options->isHumanReadableSize) {
-            el->useHumanReadable = 1;
-        }
 
         strmode(ftsent->fts_statp->st_mode, permission);
         el->strmode = strdup(permission);
@@ -662,8 +667,14 @@ allocateFile(int maxSize, int argc, char **argv,
         }
 
         if (S_ISDIR(stats.st_mode)) {
-            directories[index] = argv[i];
-            index++;
+            if (strcmp(argv[i], ".") == 0) {
+                directories[index] = "./";
+            } else if (strcmp(argv[i], "..") == 0) {
+                directories[index] = "../";
+            } else {
+                directories[index] = argv[i];
+            }
+            index++;           
         } else {
             if (options->listDirectories) {
                 directories[index] = argv[i];
