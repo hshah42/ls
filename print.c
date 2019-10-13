@@ -59,7 +59,7 @@ printLine(struct elements el, struct maxsize max) {
         } else {
             if (el.useHumanReadable) {
                 char *print = convertByteToHumanReadable(el.size);
-                long whitespaces = 4 - strlen(print);
+                long whitespaces = max.size - strlen(print);
                 addWhiteSpaces(whitespaces);
                 fprintf(stdout, "%s ", print);
             } else {
