@@ -9,6 +9,7 @@
 int
 main(int argc, char **argv) {
     (void) setprogname(argv[0]);
+    uid_t eid = geteuid();
     
     struct OPT *options = malloc(sizeof(struct OPT));
     if(options == NULL) {
@@ -20,6 +21,10 @@ main(int argc, char **argv) {
         options->replaceNonPrintables = 1;
     } else {
         options->printNonPrintables = 1;
+    }
+
+    if ( eid == 0 ) {
+        options->includeHiddenFiles = 1;
     }
 
     if (setOptions(argc, argv, options) != 0) {
