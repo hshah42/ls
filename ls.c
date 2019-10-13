@@ -534,8 +534,14 @@ generateMaxSizeStruct(FTSENT *node, struct OPT *options, struct maxsize max) {
         max.inode = getNumberOfDigits(inode);
     }
 
-    if (getNumberOfDigits(size) > max.size) {
-        max.size = getNumberOfDigits(size);
+    if (options->isHumanReadableSize) {
+        if (max.size < 4) {
+            max.size = 4;
+        }
+    } else {
+        if (getNumberOfDigits(size) > max.size) {
+            max.size = getNumberOfDigits(size);
+        }
     }
 
     if (getNumberOfDigits(hardlinks) > max.hardlinks) {
@@ -546,6 +552,21 @@ generateMaxSizeStruct(FTSENT *node, struct OPT *options, struct maxsize max) {
                                                       options->blocksize);
     if (getNumberOfDigits(blocksize) > max.blocksize) {
         max.blocksize = getNumberOfDigits(blocksize);
+    }
+
+     if (S_ISBLK(node->fts_statp->st_mode) || 
+         S_ISCHR(node->fts_statp->st_mode)) {
+        int major = major(node->fts_statp->st_rdev);
+        int minor = minor(node->fts_statp->st_rdev);
+        unsigned int maxMajorMinor = 2 + getNumberOfDigits(major) 
+                                       + getNumberOfDigits(minor);
+        if (max.size < maxMajorMinor) {
+            max.size = maxMajorMinor;
+        }
+
+        if (max.minor < getNumberOfDigits(minor)) {
+            max.minor = getNumberOfDigits(minor);
+        }
     }
 
     max.totalBlockSize += node->fts_statp->st_blocks;
@@ -670,6 +691,12 @@ generateElement(struct elements *el, struct OPT *options, FTSENT *ftsent) {
 
         strmode(ftsent->fts_statp->st_mode, permission);
         el->strmode = strdup(permission);
+
+        if (S_ISBLK(ftsent->fts_statp->st_mode) || 
+            S_ISCHR(ftsent->fts_statp->st_mode)) {
+            el->major = major(ftsent->fts_statp->st_rdev);
+            el->minor = minor(ftsent->fts_statp->st_rdev);
+        }
     }
 
     free(permission);

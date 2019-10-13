@@ -48,15 +48,25 @@ printLine(struct elements el, struct maxsize max) {
     }
 
     if (el.size >= 0 && (el.hasSize)) {
-        if (el.useHumanReadable) {
-            char *print = convertByteToHumanReadable(el.size);
-            long whitespaces = 4 - strlen(print);
+        if (el.major >= 0 && el.minor >=0) {
+            long totalLenght = 2 + getNumberOfDigits(el.major) + max.minor;
+            long whitespaces = max.size - totalLenght;
             addWhiteSpaces(whitespaces);
-            fprintf(stdout, "%s ", print);
+            fprintf(stdout, "%i, ", el.major);
+            long minorWhitspaces = max.minor - getNumberOfDigits(el.minor);
+            addWhiteSpaces(minorWhitspaces);
+            fprintf(stdout, "%i ", el.minor);
         } else {
-            long whitespaces = max.size - getNumberOfDigits(el.size);
-            addWhiteSpaces(whitespaces);
-            fprintf(stdout, "%ld ", el.size);
+            if (el.useHumanReadable) {
+                char *print = convertByteToHumanReadable(el.size);
+                long whitespaces = 4 - strlen(print);
+                addWhiteSpaces(whitespaces);
+                fprintf(stdout, "%s ", print);
+            } else {
+                long whitespaces = max.size - getNumberOfDigits(el.size);
+                addWhiteSpaces(whitespaces);
+                fprintf(stdout, "%ld ", el.size);
+            }
         }
     }
 
@@ -126,6 +136,8 @@ getDefaultStruct() {
     el.showBlockSize = defaultVal;
     el.blockSize = defaultLong;
     el.rawBlockSize = defaultRawBlockSize;
+    el.major = -1;
+    el.minor = -1;
 
     return el;
 }
@@ -142,6 +154,7 @@ getDefaultMaxSizeStruct() {
     max.group = 0;
     max.size = 0;
     max.blocksize = 0;
+    max.minor = 0;
     max.totalBlockSize = defaultRawBlockSize;
     
     return max;

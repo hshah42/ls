@@ -15,7 +15,9 @@ struct elements {
     int      useHumanReadable;
     int      showBlockSize;
     long     blockSize;
-    blkcnt_t rawBlockSize;        
+    blkcnt_t rawBlockSize;
+    int      major;
+    int      minor;      
 };
 
 struct maxsize
@@ -27,6 +29,7 @@ struct maxsize
     unsigned long size;
     unsigned long inode;
     unsigned long blocksize;
+    unsigned long minor;
     blkcnt_t totalBlockSize;
 };
 
