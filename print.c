@@ -76,25 +76,29 @@ printLine(struct elements el, struct maxsize max) {
         long whitespaces = 2 - getNumberOfDigits(temp->tm_mday);
         addWhiteSpaces(whitespaces);
         fprintf(stdout, "%d ", temp->tm_mday);
-        whitespaces = 2 - getNumberOfDigits(temp->tm_hour);
-        if (getNumberOfDigits(temp->tm_hour) > 1) {
-            addWhiteSpaces(whitespaces);
-            fprintf(stdout, "%d:", temp->tm_hour);
+        if (shouldPrintYear(el.time)) {
+            addWhiteSpaces(1);
+            unsigned long year = 1900 + temp->tm_year;
+            fprintf(stdout, "%lu ", year);
         } else {
-            addWhiteSpaces(whitespaces - 1);
-            fprintf(stdout, "0%d:", temp->tm_hour);
-        }
-        if (getNumberOfDigits(temp->tm_min) > 1) {
-            fprintf(stdout, "%d ", temp->tm_min);
-        } else {
-            fprintf(stdout, "0%d ", temp->tm_min);
+            whitespaces = 2 - getNumberOfDigits(temp->tm_hour);
+            if (getNumberOfDigits(temp->tm_hour) > 1) {
+                addWhiteSpaces(whitespaces);
+                fprintf(stdout, "%d:", temp->tm_hour);
+            } else {
+                addWhiteSpaces(whitespaces - 1);
+                fprintf(stdout, "0%d:", temp->tm_hour);
+            }
+            if (getNumberOfDigits(temp->tm_min) > 1) {
+                fprintf(stdout, "%d ", temp->tm_min);
+            } else {
+                fprintf(stdout, "0%d ", temp->tm_min);
+            }
         }
     }
 
     if (el.name != NULL) {
-        int whitespaces = max.name - strlen(el.name);
         fprintf(stdout, "%s ", el.name);
-        addWhiteSpaces(whitespaces);
     }
 
     fprintf(stdout, "\n");
@@ -303,6 +307,24 @@ printErrorIfAny(FTSENT *ftsent) {
         ftsent->fts_info == FTS_NS) {
         fprintf(stderr, "%s: %s: %s\n", getprogname(), ftsent->fts_name, strerror(ftsent->fts_errno));
         return 1;
+    }
+    return 0;
+}
+
+int
+shouldPrintYear(time_t fileTime) {
+    time_t current;
+    int sixMonthsSeconds = 15552000;
+    time(&current);
+    long timediff = (long) difftime(current, fileTime);
+
+    if (timediff > sixMonthsSeconds) {
+        return 1;
+    } else if (timediff < 0) {
+        timediff = (long) difftime(fileTime, current);
+        if (timediff > sixMonthsSeconds || timediff < 0) {
+            return 1;
+        }
     }
     return 0;
 }

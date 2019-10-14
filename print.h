@@ -47,3 +47,4 @@ void addWhiteSpaces(long number);
 char* convertByteToHumanReadable(size_t bytes);
 long convertToEnvironmentBlocksize(blkcnt_t blocks, long environmentBlocksize);
 long getBlockSize();
+int shouldPrintYear(time_t fileTime);
