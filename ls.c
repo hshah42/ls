@@ -307,7 +307,8 @@ performLs(FTS *fts, struct OPT *options, int isDirnameRequired) {
                 printNewLine();
                 printDirectory(ftsent->fts_path);
             }
-
+            // Since if there is an error and it will not get any children
+            // we need to print the reason we encountered the error
             if (ftsent->fts_level < 1 || options->recurse) {
                 printErrorIfAny(ftsent);
             }
@@ -382,7 +383,10 @@ preformLsOnfiles(FTS *fts, struct OPT *options) {
         if (ftsent->fts_level > 0) {
             fts_set(fts, ftsent, FTS_SKIP);
             continue;
-        } else if (ftsent->fts_info == FTS_DP) {
+        } else if (ftsent->fts_info == FTS_DP || ftsent->fts_info == FTS_DNR) {
+            continue;
+        }
+        if (printErrorIfAny(ftsent) != 0) {
             continue;
         }
         printInformation(options, ftsent, max);
