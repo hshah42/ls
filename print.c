@@ -295,3 +295,14 @@ convertToEnvironmentBlocksize(blkcnt_t blocks, long environmentBlocksize) {
     long updatedBlocksize = (long) ceil(blocks / divisor);
     return updatedBlocksize;
 }
+
+int
+printErrorIfAny(FTSENT *ftsent) {
+    if (ftsent->fts_info == FTS_ERR || 
+        ftsent->fts_info == FTS_DNR ||
+        ftsent->fts_info == FTS_NS) {
+        fprintf(stderr, "%s: %s: %s\n", getprogname(), ftsent->fts_name, strerror(ftsent->fts_errno));
+        return 1;
+    }
+    return 0;
+}

@@ -293,14 +293,13 @@ performLs(FTS *fts, struct OPT *options, int isDirnameRequired) {
             continue;
         }
 
-        FTSENT* node = fts_children(fts, 0);
-
         // If option is not recurse, ignore the files with level > 1
         if (ftsent->fts_level > 1 && !(options->recurse)) {
             fts_set(fts, ftsent, FTS_SKIP);
             continue;
         }
 
+        FTSENT* node = fts_children(fts, 0);
         // If ftsent has no children then continue with traversal
         if (node == NULL || (node->fts_level > 1 && !(options->recurse))) {
             if ((options->recurse || (isDirnameRequired && ftsent->fts_level == 0)) 
@@ -308,6 +307,11 @@ performLs(FTS *fts, struct OPT *options, int isDirnameRequired) {
                 printNewLine();
                 printDirectory(ftsent->fts_path);
             }
+
+            if (ftsent->fts_level < 1 || options->recurse) {
+                printErrorIfAny(ftsent);
+            }
+
             continue;
         }
         
@@ -337,6 +341,10 @@ performLs(FTS *fts, struct OPT *options, int isDirnameRequired) {
 
         while (node != NULL)
         {
+            if (printErrorIfAny(node) != 0) {
+                node = node->fts_link;
+                continue;
+            }
             if (*shouldPrintContent) {
                 if (shouldPrint(options, node)) {
                     if (printInformation(options, node, max) != 0) {

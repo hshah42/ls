@@ -128,43 +128,43 @@ compareTime(time_t timeOne,
 
 sort
 getSortFunctionalPointer(sorting_type option) {
-    int (*sort)(const FTSENT **, const FTSENT **);
+    int (*sortFunction)(const FTSENT **, const FTSENT **);
 
     switch (option)
     {
     case ASCENDING_SIZE:
-        sort = &compareSizeAscending;
+        sortFunction = &compareSizeAscending;
         break;
     case DESCENDING_SIZE:
-        sort = &compareSizeDescending;
+        sortFunction = &compareSizeDescending;
         break;
     case BY_LAST_MODIFIED:
-        sort = &compareLastModified;
+        sortFunction = &compareLastModified;
         break;
     case BY_LAST_MODIFIED_REV:
-        sort = &compareLastModifiedReverse;
+        sortFunction = &compareLastModifiedReverse;
         break;
     case BY_FILE_STATUS_CHANGE:
-        sort = &compareLastFileStatusChange;
+        sortFunction = &compareLastFileStatusChange;
         break;
     case BY_FILE_STATUS_CHANGE_REV:
-        sort = &compareLastFileStatusChangeReverse;
+        sortFunction = &compareLastFileStatusChangeReverse;
         break;
     case BY_FILE_ACCESS_TIME:
-        sort = &compareAccessTime;
+        sortFunction = &compareAccessTime;
         break;
     case BY_FILE_ACCESS_TIME_REV:
-        sort = &compareAccessTimeReverse;
+        sortFunction = &compareAccessTimeReverse;
         break;
     case LEXOGRAHICALLY:
-        sort = &compareLexographically;
+        sortFunction = &compareLexographically;
         break;
     case LEXOGRAHICALLY_REV:
-        sort = &compareLexographicallyReverese;
+        sortFunction = &compareLexographicallyReverese;
         break;
     default:
         break;
     }
 
-    return sort;
+    return sortFunction;
 }
