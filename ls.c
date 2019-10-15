@@ -33,7 +33,7 @@ main(int argc, char **argv) {
         return 1;
     }
 
-    checkBlockSize(options);
+    (void) checkBlockSize(options);
 
     maxSize = argc - optind; 
 
@@ -50,35 +50,35 @@ main(int argc, char **argv) {
             readDir(dir, options, 0, 0);
         }
         
-        free(dir);
+       (void) free(dir);
     }
     else
     {
         char **directories = malloc(argc * sizeof(char*));
         
         if (directories == NULL) {
-            printError(strerror(errno));
+            (void) printError(strerror(errno));
             return 1;
         }
 
         dirSize = allocateFile(maxSize, argc, argv, options, directories);
 
         if (dirSize > 0 && options->listDirectories) {
-            readDir(directories, options, 0, 1);
+            (void) readDir(directories, options, 0, 1);
         } else {
             if (dirSize > 0) {
                 if((argc - optind) == 1) {
-                    readDir(directories, options, 0, 0);
+                    (void) readDir(directories, options, 0, 0);
                 } else {
-                    readDir(directories, options, 1, 0);
+                    (void) readDir(directories, options, 1, 0);
                 }
             }
         }
 
-        free(directories);
+        (void) free(directories);
     }
 
-    free(options);
+    (void) free(options);
 
     return 0;
 }
@@ -209,14 +209,14 @@ readDir(char **files, struct OPT *options,
     sortFunction = getSortType(options);
 
     if((fts = fts_open(files, flags, sortFunction)) == NULL) {
-        printError(strerror(errno));
+        (void) printError(strerror(errno));
         return 1;
     }
 
     if (onFiles) {
-        preformLsOnfiles(fts, options);
+        (void) preformLsOnfiles(fts, options);
     } else {
-        performLs(fts, options, isDirnameRequired);
+        (void) performLs(fts, options, isDirnameRequired);
     }
     
     (void) fts_close(fts);
@@ -304,7 +304,7 @@ performLs(FTS *fts, struct OPT *options, int isDirnameRequired) {
 
         // If option is not recurse, ignore the files with level > 1
         if (ftsent->fts_level > 1 && !(options->recurse)) {
-            fts_set(fts, ftsent, FTS_SKIP);
+            (void) fts_set(fts, ftsent, FTS_SKIP);
             continue;
         }
 
@@ -313,13 +313,13 @@ performLs(FTS *fts, struct OPT *options, int isDirnameRequired) {
         if (node == NULL || (node->fts_level > 1 && !(options->recurse))) {
             if ((options->recurse || (isDirnameRequired && ftsent->fts_level == 0)) 
                     && ftsent->fts_info == FTS_D) {
-                printNewLine();
-                printDirectory(ftsent->fts_path);
+                (void) printNewLine();
+                (void) printDirectory(ftsent->fts_path);
             }
             // Since if there is an error and it will not get any children
             // we need to print the reason we encountered the error
             if (ftsent->fts_level < 1 || options->recurse) {
-                printErrorIfAny(ftsent);
+                (void) printErrorIfAny(ftsent);
             }
 
             continue;
@@ -327,8 +327,8 @@ performLs(FTS *fts, struct OPT *options, int isDirnameRequired) {
         
         if (*shouldPrintContent) {
             if (isDirnameRequired) {
-                printNewLine();
-                printDirectory(node->fts_parent->fts_path);
+                (void) printNewLine();
+                (void) printDirectory(node->fts_parent->fts_path);
             } else if (options->recurse) {
                 isDirnameRequired = 1;
             }
@@ -366,14 +366,14 @@ performLs(FTS *fts, struct OPT *options, int isDirnameRequired) {
                 if (shouldPrint(options, node)) {
                    max = generateMaxSizeStruct(node, options, max); 
                 } else {
-                    fts_set(fts, node, FTS_SKIP);
+                    (void) fts_set(fts, node, FTS_SKIP);
                 }
             }
 
             node = node->fts_link;
         }
 
-        postChildTraversal(shouldPrintContent, fts, directory);
+        (void) postChildTraversal(shouldPrintContent, fts, directory);
     }
 
     return 0;
@@ -390,7 +390,7 @@ preformLsOnfiles(FTS *fts, struct OPT *options) {
 
     while ((ftsent = fts_read(fts)) != NULL) {
         if (ftsent->fts_level > 0) {
-            fts_set(fts, ftsent, FTS_SKIP);
+            (void) fts_set(fts, ftsent, FTS_SKIP);
             continue;
         } else if (ftsent->fts_info == FTS_DP || ftsent->fts_info == FTS_DNR) {
             continue;
@@ -398,7 +398,7 @@ preformLsOnfiles(FTS *fts, struct OPT *options) {
         if (printErrorIfAny(ftsent) != 0) {
             continue;
         }
-        printInformation(options, ftsent, max);
+        (void) printInformation(options, ftsent, max);
     }
 
     return 0;
@@ -429,11 +429,11 @@ printInformation(struct OPT *options, FTSENT *node, struct maxsize max) {
     }
 
     if (options->appendFileType) {
-        appendType(node, &el);
+        (void) appendType(node, &el);
     }
 
     if (options->replaceNonPrintables)
-        checkPrintableCharacters(&el);
+        (void) checkPrintableCharacters(&el);
     
     if (generateElement(&el, options, node) == 0) {
         printLine(el, max);
@@ -463,20 +463,20 @@ void
 appendType(FTSENT *node, struct elements *el) {
     char newName[strlen(el->name) + 2];
     newName[0]='\0';
-    strcat(newName, el->name);
+    (void) strcat(newName, el->name);
 
     if (S_ISDIR(node->fts_statp->st_mode)) {
-        strcat(newName, "/\0");
+        (void) strcat(newName, "/\0");
     } else if (S_ISLNK(node->fts_statp->st_mode)) {
-        strcat(newName, "@\0");
+        (void) strcat(newName, "@\0");
     } else if (node->fts_info == FTS_W) {
-        strcat(newName, "%\0");
+        (void) strcat(newName, "%\0");
     } else if (S_ISSOCK(node->fts_statp->st_mode)) {
-        strcat(newName, "=\0");
+        (void) strcat(newName, "=\0");
     } else if (S_ISFIFO(node->fts_statp->st_mode)) {
-        strcat(newName, "|\0");
+        (void) strcat(newName, "|\0");
     } else if (node->fts_statp->st_mode & S_IXUSR) {
-        strcat(newName, "*\0");
+        (void) strcat(newName, "*\0");
     }
 
     el->name = strdup(newName);
@@ -494,23 +494,23 @@ addLinkName(FTSENT *node,  struct elements *el) {
     pathname[0]='\0';
     // Using path because readlink requires full path or else
     // readlink will not be able to find the file
-    strcat(pathname, node->fts_accpath);
+    (void) strcat(pathname, node->fts_accpath);
     
     if (S_ISDIR(node->fts_parent->fts_statp->st_mode)) {
-        strcat(pathname, node->fts_name);  
+        (void) strcat(pathname, node->fts_name);  
     }
     
     ssize_t len;
     if ((len = readlink(pathname, linkname, (sizeof(linkname) - 1) )) == -1) {
-        printError(strerror(errno));
+        (void) printError(strerror(errno));
         return 1;
     }
     linkname[len] = '\0';
     char fullLink[strlen(linkname) + strlen(el->name) + 1];
     fullLink[0] = '\0';
-    strcat(fullLink, el->name);
-    strcat(fullLink, " -> ");
-    strcat(fullLink, linkname);
+    (void) strcat(fullLink, el->name);
+    (void) strcat(fullLink, " -> ");
+    (void) strcat(fullLink, linkname);
     el->name = strdup(fullLink);
     return 0;
 }
@@ -702,7 +702,7 @@ generateElement(struct elements *el, struct OPT *options, FTSENT *ftsent) {
             }
             sprintf(group, "%d", ftsent->fts_statp->st_gid);
             el->group = strdup(group);
-            free(group);
+            (void) free(group);
         } else {
             el->group = groupInfo->gr_name;
         }
@@ -719,7 +719,7 @@ generateElement(struct elements *el, struct OPT *options, FTSENT *ftsent) {
             el->time = ftsent->fts_statp->st_mtimespec.tv_sec;
         }
 
-        strmode(ftsent->fts_statp->st_mode, permission);
+        (void) strmode(ftsent->fts_statp->st_mode, permission);
         el->strmode = strdup(permission);
 
         if (S_ISBLK(ftsent->fts_statp->st_mode) || 
@@ -755,12 +755,12 @@ allocateFile(int maxSize, int argc, char **argv,
                 continue;
             }
             error[0] = '\0';
-            strcat(error, argv[i]);
-            strcat(error, ": ");
-            strcat(error, strerror(errno));
+            (void) strcat(error, argv[i]);
+            (void) strcat(error, ": ");
+            (void) strcat(error, strerror(errno));
             errors[*errorIndex] = strdup(error);
             (*errorIndex)++;
-            free(error);
+            (void) free(error);
             continue;
         }
 
@@ -784,11 +784,11 @@ allocateFile(int maxSize, int argc, char **argv,
         }
     }
 
-    printErrors(errors, errorIndex);
+    (void) printErrors(errors, errorIndex);
     
     if (*fileIndex > 0) {
         files[*fileIndex] = '\0';
-        readDir(files, options, 0, 1);
+        (void) readDir(files, options, 0, 1);
     }
 
     return index;
