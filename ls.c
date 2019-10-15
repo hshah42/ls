@@ -718,7 +718,8 @@ generateElement(struct elements *el, struct OPT *options, FTSENT *ftsent) {
         } else {
             el->time = ftsent->fts_statp->st_mtimespec.tv_sec;
         }
-
+        el->hasTime = 1;
+        
         (void) strmode(ftsent->fts_statp->st_mode, permission);
         el->strmode = strdup(permission);
 

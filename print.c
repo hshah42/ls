@@ -74,7 +74,7 @@ printLine(struct elements el, struct maxsize max) {
         }
     }
 
-    if (el.time > 0) {
+    if (el.hasTime) {
         temp = localtime(&(el.time));
         fprintf(stdout, "%s ", monthNames[temp->tm_mon]);
         long whitespaces = 2 - getNumberOfDigits(temp->tm_mday);
@@ -146,6 +146,7 @@ getDefaultStruct() {
     el.rawBlockSize = defaultRawBlockSize;
     el.major = -1;
     el.minor = -1;
+    el.hasTime = defaultVal;
 
     return el;
 }
@@ -317,6 +318,10 @@ printErrorIfAny(FTSENT *ftsent) {
 
 int
 shouldPrintYear(time_t fileTime) {
+    if (fileTime < 0) {
+        return 1;
+    }
+
     time_t current;
     int sixMonthsSeconds = 15552000;
     time(&current);

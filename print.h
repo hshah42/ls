@@ -8,6 +8,7 @@ struct elements {
     char     *group;
     char     *symbolicLink;
     time_t   time;
+    int      hasTime;
     nlink_t  hardlinks;
     off_t    size;
     ino_t    inode;
