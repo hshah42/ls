@@ -293,7 +293,6 @@ performLs(FTS *fts, struct OPT *options, int isDirnameRequired) {
     struct maxsize max = getDefaultMaxSizeStruct();
     FTSENT *ftsent;
     FTSENT* node;
-    FTSENT* directory;
 
     while ((ftsent = fts_read(fts)) != NULL) {
         // Ignore the dirs which should not be printed 
@@ -325,58 +324,66 @@ performLs(FTS *fts, struct OPT *options, int isDirnameRequired) {
             continue;
         }
         
-        if (*shouldPrintContent) {
-            if (isDirnameRequired) {
-                (void) printNewLine();
-                (void) printDirectory(node->fts_parent->fts_path);
-            } else if (options->recurse) {
-                isDirnameRequired = 1;
-            }
-
-            if (options->printStat || options->printBlockSize) {
-                if (options->isHumanReadableSize) {
-                    char *output = convertByteToHumanReadable(max.totalBlockSize * 512);
-                    fprintf(stdout, "total: %s \n", output);
-                } else {
-                    long totalBlocks = convertToEnvironmentBlocksize(max.totalBlockSize, 
-                                                                     options->blocksize);
-                    fprintf(stdout, "total: %lu \n", totalBlocks);
-                }
-            }
+        if (isDirnameRequired) {
+            (void) printNewLine();
+            (void) printDirectory(node->fts_parent->fts_path);
+        } else if (options->recurse) {
+            isDirnameRequired = 1;
         }
-        else
-            max = getDefaultMaxSizeStruct();
-        
-        directory = node->fts_parent;
 
-        while (node != NULL)
-        {
-            if (printErrorIfAny(node) != 0) {
-                node = node->fts_link;
-                continue;
-            }
-            if (*shouldPrintContent) {
-                if (shouldPrint(options, node)) {
-                    if (printInformation(options, node, max) != 0) {
-                        node = node->fts_link;
-                        continue;
-                    }
-                }
+        max = getDefaultMaxSizeStruct();
+
+        // Traverse linked list to get the max width for each field
+        max = traverseChildren(fts, node, 0, options, max);
+
+        if (options->printStat || options->printBlockSize) {
+            if (options->isHumanReadableSize) {
+                char *output = convertByteToHumanReadable(max.totalBlockSize * 512);
+                fprintf(stdout, "total: %s \n", output);
             } else {
-                if (shouldPrint(options, node)) {
-                   max = generateMaxSizeStruct(node, options, max); 
-                } else {
-                    (void) fts_set(fts, node, FTS_SKIP);
-                }
+                long totalBlocks = convertToEnvironmentBlocksize(max.totalBlockSize, 
+                                                                     options->blocksize);
+                fprintf(stdout, "total: %lu \n", totalBlocks);
             }
-
-            node = node->fts_link;
         }
 
-        (void) postChildTraversal(shouldPrintContent, fts, directory);
+        // Traverse the linked list again to print the values using 
+        // the max generated in previous traversal
+        (void) traverseChildren(fts, node, 1, options, max);
+
+        (void) postChildTraversal(shouldPrintContent);
     }
 
     return 0;
+}
+
+struct maxsize
+traverseChildren(FTS *fts, FTSENT *node, int shouldPrintContent, 
+                 struct OPT *options, struct maxsize max) {
+    while (node != NULL)
+    {
+        if (printErrorIfAny(node) != 0) {
+            node = node->fts_link;
+            continue;
+        }
+        if (shouldPrintContent) {
+            if (shouldPrint(options, node)) {
+                if (printInformation(options, node, max) != 0) {
+                    node = node->fts_link;
+                    continue;
+                }
+            }
+        } else {
+            if (shouldPrint(options, node)) {
+                max = generateMaxSizeStruct(node, options, max); 
+            } else {
+                (void) fts_set(fts, node, FTS_SKIP);
+            }
+        }
+        node = node->fts_link;
+    }
+
+    return max;
 }
 
 /**
@@ -595,15 +602,19 @@ generateMaxSizeStruct(FTSENT *node, struct OPT *options, struct maxsize max) {
         }
     }
 
-    max.totalBlockSize += node->fts_statp->st_blocks;
+    if (options->isHumanReadableSize) {
+        max.totalBlockSize = max.totalBlockSize + (size / 512);
+    } else {
+        max.totalBlockSize = max.totalBlockSize + node->fts_statp->st_blocks;
+    }
 
     return max;
 }
 
 void
-postChildTraversal(int *shouldPrintContent, FTS *fts, FTSENT *directory) {
-    if (!(*shouldPrintContent))
-        fts_set(fts, directory, FTS_AGAIN);
+postChildTraversal(int *shouldPrintContent) {
+    // if (!(*shouldPrintContent))
+    //     fts_set(fts, directory, FTS_AGAIN);
 
     if (*shouldPrintContent) {
         *shouldPrintContent = 0;
@@ -766,13 +777,7 @@ allocateFile(int maxSize, int argc, char **argv,
         }
 
         if (S_ISDIR(stats.st_mode)) {
-            if (strcmp(argv[i], ".") == 0) {
-                directories[index] = "./";
-            } else if (strcmp(argv[i], "..") == 0) {
-                directories[index] = "../";
-            } else {
-                directories[index] = argv[i];
-            }
+            directories[index] = argv[i];
             index++;           
         } else {
             if (options->listDirectories) {

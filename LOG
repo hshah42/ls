@@ -1,0 +1,317 @@
+commit 891a1bfaee0050ebe8c4ea6b69744dade0680da2
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Tue Oct 15 01:48:04 2019 -0400
+
+    Add void
+
+commit 8fa5612b3c9ab57e02d86cc11e668e80d1f2d03f
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Mon Oct 14 23:10:05 2019 -0400
+
+    Appending file type before creating sym name
+
+commit 8635da582e103df69b356748db8943a188056ac6
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Mon Oct 14 23:02:45 2019 -0400
+
+    Ahhh use lstat
+
+commit b421a5e43b0c1a2f87714caaed617abd6deb56da
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Mon Oct 14 22:43:53 2019 -0400
+
+    Adding condition to check for negative values in variables
+
+commit 097c0f483b7f8da1f625513d0384160f50f81ef9
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Mon Oct 14 22:36:57 2019 -0400
+
+    Solving issue related to time not being shown if < 0
+
+commit 8cfaa726181645626014eab405600fdedad7e1ef
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Mon Oct 14 22:07:20 2019 -0400
+
+    adding executables to group and owner
+
+commit d20bf1adbdfe0d93efcdec204a45d1ff3edb3298
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Mon Oct 14 21:23:54 2019 -0400
+
+    Adding void to methods called but doing nothing with the return value
+
+commit fc7c901afc3ed19bfee5b3bc3c971ecccb03df26
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Mon Oct 14 21:11:22 2019 -0400
+
+    Adding nanosecond comparision for more accurate comparison when compared to orignal ls
+
+commit 5b7ad1506f9db062890722144216d79eec7992f0
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Mon Oct 14 20:13:13 2019 -0400
+
+    Fixing last minute cases
+
+commit eeea2775ec9027ceeefe5dc3279de4980b281e67
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Mon Oct 14 19:13:28 2019 -0400
+
+    Adding support for year
+
+commit bdfa460f586d0aee0d30d8ce951921ce4dffdc02
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Mon Oct 14 12:22:21 2019 -0400
+
+    Adding error printing to file traversal
+
+commit 3cd4407c3a50f707160a185ca8a42d78ae69d7f2
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Mon Oct 14 01:13:30 2019 -0400
+
+    Adding changes for printing error
+
+commit d04465beb4bcb74f2c98a40be3de156be2c0c0bb
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Sun Oct 13 13:23:46 2019 -0400
+
+    Adding code to include hidden files if the user is root
+
+commit 62b9e20a08e009a7024808edb38acaf2de902972
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Sun Oct 13 11:08:56 2019 -0400
+
+    Fixing alignment when -h is being used
+
+commit 6537b544984269628469101d6fbec8847ff4a677
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Sun Oct 13 01:51:21 2019 -0400
+
+    Adding support for block special and char special files where device major minor is to be displayed
+
+commit 39fbed6565ffb7683b02de22ebbaf40b593194b0
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Sat Oct 12 19:13:36 2019 -0400
+
+    Making some changes which i forgot
+
+commit 06e998a7a5b1521fb25f7bbea745efe0d3f7bb0a
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Sat Oct 12 18:14:05 2019 -0400
+
+    Fixing some behaviours
+
+commit 637c8992368cbd38eb21893f8d6c3ae6d260d535
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Sat Oct 12 15:46:35 2019 -0400
+
+    minor bug fixes
+
+commit 2ad69b4d2b0b2e2d5a04d943766466cb56f2e547
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Fri Oct 11 19:57:18 2019 -0400
+
+    Fixing bug related to owner max being used in group
+
+commit 85de8497a256858cdfbf5c24781f26284dcd692c
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Fri Oct 11 19:12:13 2019 -0400
+
+    Fixing issue for empty directory
+
+commit 3aa3820a715f3f14ba277b917e3b890c037bebf9
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Fri Oct 11 17:55:41 2019 -0400
+
+    ignoring . file traversal when not a or A
+
+commit 2ffd8b77d46307a4b3703604a0a8ec55e96a13b0
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Fri Oct 11 15:20:56 2019 -0400
+
+    working code
+
+commit c3085af551ae94c3c043ac50695b2fd5f97537f8
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Thu Oct 10 20:34:23 2019 -0400
+
+    Adding error messages
+
+commit c3d87ec214521f92426d41b2beeddd4be8653ebb
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Thu Oct 10 16:30:00 2019 -0400
+
+    Adding option k
+
+commit 89d6ab222fcc042afe8915be4dcc42d587678bfe
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Thu Oct 10 15:50:19 2019 -0400
+
+    Reversing order of inode and blocksize
+
+commit 39cbc53190564817468ba66b1b02a986319ba42f
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Thu Oct 10 15:27:44 2019 -0400
+
+    Implementing more option which is -s to display the blocks
+
+commit 784a8fc0e927d93386228c053905172324fa09ca
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Thu Oct 10 00:06:19 2019 -0400
+
+    Always free the memoryy
+
+commit c926078d06a65e3ec9be18215f61da2069caa7c1
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Thu Oct 10 00:01:29 2019 -0400
+
+    Adding -h option and setting base for other options
+
+commit 61d4e0fd3b994602e2dd03151131ac938917e9b1
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Tue Oct 8 14:08:49 2019 -0400
+
+    saving before update
+
+commit fd2325db4f9c49c18bf94e47110819e5b3bad1e7
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Mon Oct 7 17:12:13 2019 -0400
+
+    I dont know what i did todat
+
+commit 7f213f6156f8cdddf20354fbde16b5b34bb67ef0
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Mon Oct 7 15:01:46 2019 -0400
+
+    Fixing file traversal issue
+
+commit f540d9145b8ed8c509b6a880f3f6ed9ee908bb73
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Mon Oct 7 00:11:07 2019 -0400
+
+    Adding printable and non printable options
+
+commit 0ca1dffb1ce95fe3a99b254e76957f667f2d7d0f
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Sun Oct 6 21:36:31 2019 -0400
+
+    Adding functionalities
+
+commit 08206476f74ced40f331422e99b3304a38e008af
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Sun Oct 6 16:39:39 2019 -0400
+
+    Adding support for more flags
+
+commit 7fef78e8f205e8adf005cdfdf51265a29171d3c8
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Sun Oct 6 13:57:25 2019 -0400
+
+    Fixing garbage issue for strcat for symbolic link printing issue
+
+commit 126a52d9905c9982b1e1594d21f8c5172d0341cb
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Sat Oct 5 18:30:47 2019 -0400
+
+    Adding options n and t to the functionality
+
+commit 6901018778f2300c1b411f08bcd0a22adda6c1ac
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Sat Oct 5 13:40:39 2019 -0400
+
+    Fixing warnings thrown by cflags
+
+commit a4396be99ddd7b0316a8cf4c7b05b0fc96222ddb
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Fri Oct 4 21:12:48 2019 -0400
+
+    Adding sorted by option and commoning out some headers
+
+commit 10e75954c0277cf291de41c1a3a4ed65450475f0
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Fri Oct 4 19:00:43 2019 -0400
+
+    Adding documentation
+
+commit 1bc4050e69646185e76e7b9f8e71f8fe31b5be42
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Fri Oct 4 15:19:43 2019 -0400
+
+    Making changes to ls command
+
+commit b9949dcc7ac3aaf93ae81379f5e02f8caafc17c4
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Thu Oct 3 19:53:46 2019 -0400
+
+    Fixing way too may bugs
+
+commit 34cccf1a773f50619209f592592e49dc6b970b30
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Thu Oct 3 18:28:14 2019 -0400
+
+    Fixing bugs leading to seg fauls
+
+commit c6d4b436816777443416200ee94139308454f99c
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Thu Oct 3 16:10:08 2019 -0400
+
+    adding pretty print option
+
+commit 8433fdd91cb282eaf6f0999b47ef5b9142e41a05
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Thu Oct 3 12:41:18 2019 -0400
+
+    Adding code to get sizes and fixing seg fault
+
+commit 010af3b0752b07d2c7292efc62411ed1eee9b065
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Wed Oct 2 23:43:16 2019 -0400
+
+    Adding foundation for pretty prunt
+
+commit 5fc4324f87afc3bdcdd7b5f42621bf56f8f248cc
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Wed Oct 2 12:11:59 2019 -0400
+
+    fixing stat issue
+
+commit a100e3e2eced7d14bc29233bd84cd1a2fa00c36a
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Wed Oct 2 11:49:00 2019 -0400
+
+    Changing ls to use fts children
+
+commit bad035f865525368a0b13f452234ece2ea0730bc
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Wed Oct 2 00:53:03 2019 -0400
+
+    Adding code for fts
+
+commit 86ed34e2798672a2957010f4610634d1bdd716e2
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Wed Oct 2 00:10:10 2019 -0400
+
+    Adding fts implementation
+
+commit a0bbf170af088823f44ebe0459d2e43be094e32d
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Mon Sep 30 16:25:58 2019 -0400
+
+    Adding L functionality
+
+commit 67db7021928e0bb2c287673025de4cfa1b378005
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Mon Sep 30 00:06:56 2019 -0400
+
+    Fixing print issue
+
+commit 0fdcd56d5fbde6153216a3ebef72fbf64baea4eb
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Sun Sep 29 22:41:13 2019 -0400
+
+    Adding code for linking print and ls
+
+commit 60749c27894a6410e6b445e773f9ea4e8bad68e4
+Author: Hem Shah <hshah42@stevens.edu>
+Date:   Sun Sep 29 15:03:10 2019 -0400
+
+    Initial commit

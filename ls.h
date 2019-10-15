@@ -41,7 +41,7 @@ int allocateFile(int maxSize, int argc, char **argv, struct OPT *options, char *
 int generateElement(struct elements *el, struct OPT *options, FTSENT *ftsent);
 int performLs(FTS *fts, struct OPT *options, int isDirnameRequired);
 int shouldPrint(struct OPT *options, FTSENT *node);
-void postChildTraversal(int *shouldPrintContent, FTS *fts, FTSENT *directory);
+void postChildTraversal(int *shouldPrintContent);
 struct maxsize generateMaxSizeStruct(FTSENT *node, struct OPT *options, struct maxsize max);
 int addLinkName(FTSENT *node, struct elements *el);
 void resetSortOptions(struct OPT *options);
@@ -53,3 +53,4 @@ int preformLsOnfiles (FTS *fts, struct OPT *options);
 FTSENT deepCopyFTSENT(FTSENT *fts, int includeParent);
 void checkBlockSize(struct OPT *options);
 int printErrorIfAny(FTSENT *ftsent);
+struct maxsize traverseChildren(FTS *fts, FTSENT *node, int shouldPrintContent, struct OPT *options, struct maxsize max);
