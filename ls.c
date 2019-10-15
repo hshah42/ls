@@ -287,36 +287,36 @@ getSortType(struct OPT *options) {
 int
 performLs(FTS *fts, struct OPT *options, int isDirnameRequired) {
     int falseInit = 0;
-    // This variable determines when to print the contents and
-    // when to get the max values for printing.
+    /* This variable determines when to print the contents and
+     when to get the max values for printing */
     int *shouldPrintContent = &falseInit;
     struct maxsize max = getDefaultMaxSizeStruct();
     FTSENT *ftsent;
     FTSENT* node;
 
     while ((ftsent = fts_read(fts)) != NULL) {
-        // Ignore the dirs which should not be printed 
-        // and are not the root directory
+        /* Ignore the dirs which should not be printed 
+         and are not the root directory */
         if (!shouldPrint(options, ftsent) && ftsent->fts_level != 0) {
             continue;
         }
 
-        // If option is not recurse, ignore the files with level > 1
+        /* If option is not recurse, ignore the files with level > 1 */
         if (ftsent->fts_level > 1 && !(options->recurse)) {
             (void) fts_set(fts, ftsent, FTS_SKIP);
             continue;
         }
 
         node = fts_children(fts, 0);
-        // If ftsent has no children then continue with traversal
+        /* If ftsent has no children then continue with traversal */
         if (node == NULL || (node->fts_level > 1 && !(options->recurse))) {
             if ((options->recurse || (isDirnameRequired && ftsent->fts_level == 0)) 
                     && ftsent->fts_info == FTS_D) {
                 (void) printNewLine();
                 (void) printDirectory(ftsent->fts_path);
             }
-            // Since if there is an error and it will not get any children
-            // we need to print the reason we encountered the error
+            /* Since if there is an error and it will not get any children
+               we need to print the reason we encountered the error */
             if (ftsent->fts_level < 1 || options->recurse) {
                 (void) printErrorIfAny(ftsent);
             }
@@ -333,7 +333,7 @@ performLs(FTS *fts, struct OPT *options, int isDirnameRequired) {
 
         max = getDefaultMaxSizeStruct();
 
-        // Traverse linked list to get the max width for each field
+        /* Traverse linked list to get the max width for each field */
         max = traverseChildren(fts, node, 0, options, max);
 
         if (options->printStat || options->printBlockSize) {
@@ -347,8 +347,8 @@ performLs(FTS *fts, struct OPT *options, int isDirnameRequired) {
             }
         }
 
-        // Traverse the linked list again to print the values using 
-        // the max generated in previous traversal
+        /* Traverse the linked list again to print the values using 
+           the max generated in previous traversal */
         (void) traverseChildren(fts, node, 1, options, max);
 
         (void) postChildTraversal(shouldPrintContent);
@@ -420,9 +420,9 @@ int
 printInformation(struct OPT *options, FTSENT *node, struct maxsize max) {
     struct elements el = getDefaultStruct();
 
-    // If directory and if the node is of level 0 which means that
-    // the directory was passed in the argumets, then we need to print the path
-    // and in other cases we print the file name
+    /* If directory and if the node is of level 0 which means that
+       the directory was passed in the argumets, then we need to print the path
+       and in other cases we print the file name */
      if (options->listDirectories || node->fts_level == 0) {
              el.name = node->fts_path;
     } else {
@@ -499,8 +499,8 @@ addLinkName(FTSENT *node,  struct elements *el) {
     char linkname[PATH_MAX];
     char pathname[node->fts_namelen + node->fts_pathlen + 1];
     pathname[0]='\0';
-    // Using path because readlink requires full path or else
-    // readlink will not be able to find the file
+    /* Using path because readlink requires full path or else
+       readlink will not be able to find the file */
     (void) strcat(pathname, node->fts_accpath);
     
     if (S_ISDIR(node->fts_parent->fts_statp->st_mode)) {
@@ -613,9 +613,6 @@ generateMaxSizeStruct(FTSENT *node, struct OPT *options, struct maxsize max) {
 
 void
 postChildTraversal(int *shouldPrintContent) {
-    // if (!(*shouldPrintContent))
-    //     fts_set(fts, directory, FTS_AGAIN);
-
     if (*shouldPrintContent) {
         *shouldPrintContent = 0;
     } else {
