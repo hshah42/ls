@@ -5,3 +5,4 @@
 #include <fts.h>
 #include <stdlib.h>
 #include <math.h>
+#include <errno.h>

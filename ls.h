@@ -1,7 +1,6 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <unistd.h>
-#include <errno.h>
 #include <pwd.h>
 #include <grp.h>
 #include <limits.h>
@@ -33,12 +32,6 @@ struct OPT
     long blocksize;
     int printBlockSize;
     int printBlockSizeInK;
-};
-
-struct output
-{
-    char **error;
-    struct elements el[];
 };
 
 int readDir(char **files, struct OPT *options, int isDirnameRequired, int onFiles);

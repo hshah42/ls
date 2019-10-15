@@ -15,6 +15,10 @@ printLine(struct elements el, struct maxsize max) {
     if (el.blockSize >= 0 && el.showBlockSize) {
         if (el.useHumanReadable) {
             char *print = convertByteToHumanReadable(el.rawBlockSize);
+            if (print == NULL) {
+                printError(strerror(errno));
+                return;
+            }
             long whitespaces = 4 - strlen(print);
             addWhiteSpaces(whitespaces);
             fprintf(stdout, "%s ", print);

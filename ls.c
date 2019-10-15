@@ -10,6 +10,8 @@ int
 main(int argc, char **argv) {
     (void) setprogname(argv[0]);
     uid_t eid = geteuid();
+    int maxSize;
+    int dirSize;
     
     struct OPT *options = malloc(sizeof(struct OPT));
     if(options == NULL) {
@@ -33,10 +35,14 @@ main(int argc, char **argv) {
 
     checkBlockSize(options);
 
-    int maxSize = argc - optind; 
+    maxSize = argc - optind; 
 
     if(optind == argc) {
         char **dir = malloc(2);
+        if (dir == NULL) {
+            return 1;
+        }
+
         dir[0] = "./";
         if (options->listDirectories) {
             readDir(dir, options, 0, 1);
@@ -55,7 +61,7 @@ main(int argc, char **argv) {
             return 1;
         }
 
-        int dirSize = allocateFile(maxSize, argc, argv, options, directories);
+        dirSize = allocateFile(maxSize, argc, argv, options, directories);
 
         if (dirSize > 0 && options->listDirectories) {
             readDir(directories, options, 0, 1);
@@ -193,13 +199,14 @@ int
 readDir(char **files, struct OPT *options, 
         int isDirnameRequired, int onFiles) {
     FTS *fts;
+    sort sortFunction;
     int flags = FTS_PHYSICAL | FTS_NOCHDIR;
 
     if(options->listAllFlag) {
         flags = flags | FTS_SEEDOT;
     }
     
-    sort sortFunction = getSortType(options);
+    sortFunction = getSortType(options);
 
     if((fts = fts_open(files, flags, sortFunction)) == NULL) {
         printError(strerror(errno));
@@ -285,6 +292,8 @@ performLs(FTS *fts, struct OPT *options, int isDirnameRequired) {
     int *shouldPrintContent = &falseInit;
     struct maxsize max = getDefaultMaxSizeStruct();
     FTSENT *ftsent;
+    FTSENT* node;
+    FTSENT* directory;
 
     while ((ftsent = fts_read(fts)) != NULL) {
         // Ignore the dirs which should not be printed 
@@ -299,7 +308,7 @@ performLs(FTS *fts, struct OPT *options, int isDirnameRequired) {
             continue;
         }
 
-        FTSENT* node = fts_children(fts, 0);
+        node = fts_children(fts, 0);
         // If ftsent has no children then continue with traversal
         if (node == NULL || (node->fts_level > 1 && !(options->recurse))) {
             if ((options->recurse || (isDirnameRequired && ftsent->fts_level == 0)) 
@@ -338,7 +347,7 @@ performLs(FTS *fts, struct OPT *options, int isDirnameRequired) {
         else
             max = getDefaultMaxSizeStruct();
         
-        FTSENT* directory = node->fts_parent;
+        directory = node->fts_parent;
 
         while (node != NULL)
         {
@@ -535,7 +544,7 @@ generateMaxSizeStruct(FTSENT *node, struct OPT *options, struct maxsize max) {
     if (options->printOwnerAndGroupID || 
         (groupInfo = getgrgid(node->fts_statp->st_gid)) == NULL) {
         if (getNumberOfDigits(node->fts_statp->st_gid) > max.group) {
-            max.owner = getNumberOfDigits(node->fts_statp->st_gid);
+            max.group = getNumberOfDigits(node->fts_statp->st_gid);
         }
     } else {
         if (strlen(groupInfo->gr_name) > max.group) {
@@ -644,6 +653,10 @@ generateElement(struct elements *el, struct OPT *options, FTSENT *ftsent) {
     struct passwd *userInfo;
     struct group *groupInfo;
     char *permission = malloc(10);
+    
+    if (permission == NULL) {
+        return 1;
+    }
 
     if (options->printBlockSize) {
         el->blockSize = convertToEnvironmentBlocksize(ftsent->fts_statp->st_blocks, 
@@ -738,6 +751,9 @@ allocateFile(int maxSize, int argc, char **argv,
     for (int i=optind ; i < argc; i++) {
         if(stat(argv[i], &stats) != 0) {
             char *error = malloc(strlen(argv[i]) + strlen(strerror(errno)) + 3);
+            if (error == NULL) {
+                continue;
+            }
             error[0] = '\0';
             strcat(error, argv[i]);
             strcat(error, ": ");
