@@ -815,15 +815,21 @@ checkBlockSize(struct OPT *options) {
 
         if (blockSize == -1) {
             options->blocksize = 512;
-            fprintf(stderr, "%s: %s: unknown blocksize \n", programName, env);
-            fprintf(stderr, "%s: maximum blocksize is 1G \n", programName);
-            fprintf(stderr, "%s: %s: minimum blocksize is 512 \n", programName, env);
+            if (options->printStat || options->printBlockSize) {
+                fprintf(stderr, "%s: %s: unknown blocksize \n", programName, env);
+                fprintf(stderr, "%s: maximum blocksize is 1G \n", programName);
+                fprintf(stderr, "%s: %s: minimum blocksize is 512 \n", programName, env);
+            }
         } else if (blockSize == -2) {
             options->blocksize = 512;
-            fprintf(stderr, "%s: %s: minimum blocksize is 512 \n", programName, env);
+            if (options->printStat || options->printBlockSize) {
+                fprintf(stderr, "%s: %s: minimum blocksize is 512 \n", programName, env);
+            }
         } else if (blockSize == -3) {
             options->blocksize = 1024 * 1024 *1024;
-            fprintf(stderr, "%s: maximum blocksize is 1G \n", programName);
+            if (options->printStat || options->printBlockSize) {
+                fprintf(stderr, "%s: maximum blocksize is 1G \n", programName);
+            }
         } else {
              options->blocksize = 512;
         }
