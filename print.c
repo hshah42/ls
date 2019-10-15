@@ -266,6 +266,10 @@ getBlockSize() {
     long blockSize = 0;
     long multiplier = 1024;
 
+    if (strncmp(environmentValue, "-", 1) == 0) {
+        return -2;
+    }
+
     for (unsigned int i = 0; i < strlen(environmentValue); i++) {
         char value = environmentValue[i];
         if (isdigit(value)) {
