@@ -421,15 +421,15 @@ printInformation(struct OPT *options, FTSENT *node, struct maxsize max) {
     } else {
              el.name = node->fts_name;
     }
+
+    if (options->appendFileType) {
+        (void) appendType(node, &el);
+    }
                     
     if (S_ISLNK(node->fts_statp->st_mode) && options->printStat) {
         if (addLinkName(node, &el) != 0) {
             return 1;
         }
-    }
-
-    if (options->appendFileType) {
-        (void) appendType(node, &el);
     }
 
     if (options->replaceNonPrintables)
