@@ -25,4 +25,4 @@ int compareAccessTime(const FTSENT **fileOnePointer, const FTSENT **fileTwoPoint
 int compareAccessTimeReverse(const FTSENT **fileOnePointer, const FTSENT **fileTwoPointer);
 int compareLexographically(const FTSENT **fileOnePointer, const FTSENT **fileTwoPointer);
 sort getSortFunctionalPointer(sorting_type option);
-int compareTime(time_t timeOne, time_t timeTwo, const FTSENT **fileOnePointer, const FTSENT **fileTwoPointer);
+int compareTime(time_t timeOne, time_t timeTwo, time_t timeOneNano, time_t timeTwoNanp, const FTSENT **fileOnePointer, const FTSENT **fileTwoPointer);

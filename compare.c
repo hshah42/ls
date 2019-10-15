@@ -35,6 +35,8 @@ compareLastModified(const FTSENT **fileOnePointer,
     const FTSENT *fileTwo = *fileTwoPointer;
     return compareTime(fileOne->fts_statp->st_mtimespec.tv_sec, 
                        fileTwo->fts_statp->st_mtimespec.tv_sec,
+                       fileOne->fts_statp->st_mtimespec.tv_nsec,
+                       fileTwo->fts_statp->st_mtimespec.tv_nsec,
                        fileOnePointer,
                        fileTwoPointer);
 }
@@ -46,6 +48,8 @@ compareLastModifiedReverse(const FTSENT **fileOnePointer,
     const FTSENT *fileTwo = *fileTwoPointer;
     return compareTime(fileTwo->fts_statp->st_mtimespec.tv_sec, 
                        fileOne->fts_statp->st_mtimespec.tv_sec,
+                       fileTwo->fts_statp->st_mtimespec.tv_nsec,
+                       fileOne->fts_statp->st_mtimespec.tv_nsec,
                        fileTwoPointer,
                        fileOnePointer);
 }
@@ -57,6 +61,8 @@ compareLastFileStatusChange(const FTSENT **fileOnePointer,
     const FTSENT *fileTwo = *fileTwoPointer;
     return compareTime(fileOne->fts_statp->st_ctimespec.tv_sec, 
                        fileTwo->fts_statp->st_ctimespec.tv_sec,
+                       fileOne->fts_statp->st_ctimespec.tv_nsec, 
+                       fileTwo->fts_statp->st_ctimespec.tv_nsec,
                        fileOnePointer,
                        fileTwoPointer);
 }
@@ -68,6 +74,8 @@ compareLastFileStatusChangeReverse(const FTSENT **fileOnePointer,
     const FTSENT *fileTwo = *fileTwoPointer;
     return compareTime(fileTwo->fts_statp->st_ctimespec.tv_sec, 
                        fileOne->fts_statp->st_ctimespec.tv_sec,
+                       fileTwo->fts_statp->st_ctimespec.tv_nsec, 
+                       fileOne->fts_statp->st_ctimespec.tv_nsec,
                        fileTwoPointer,
                        fileOnePointer);
 }
@@ -79,6 +87,8 @@ compareAccessTime(const FTSENT **fileOnePointer,
     const FTSENT *fileTwo = *fileTwoPointer;
     return compareTime(fileOne->fts_statp->st_atimespec.tv_sec, 
                        fileTwo->fts_statp->st_atimespec.tv_sec,
+                       fileOne->fts_statp->st_atimespec.tv_nsec, 
+                       fileTwo->fts_statp->st_atimespec.tv_nsec,
                        fileOnePointer,
                        fileTwoPointer);
 }
@@ -90,6 +100,8 @@ compareAccessTimeReverse(const FTSENT **fileOnePointer,
     const FTSENT *fileTwo = *fileTwoPointer;
     return compareTime(fileTwo->fts_statp->st_atimespec.tv_sec, 
                        fileOne->fts_statp->st_atimespec.tv_sec,
+                       fileTwo->fts_statp->st_atimespec.tv_nsec, 
+                       fileOne->fts_statp->st_atimespec.tv_nsec,
                        fileTwoPointer,
                        fileOnePointer);
 }
@@ -114,13 +126,21 @@ compareLexographicallyReverese(const FTSENT **fileOnePointer,
 
 int
 compareTime(time_t timeOne, 
-            time_t timeTwo, 
+            time_t timeTwo,
+            time_t timeOneNano,
+            time_t timeTwoNano, 
             const FTSENT **fileOnePointer, 
             const FTSENT **fileTwoPointer) {
     if (timeOne > timeTwo) {
         return -1;
     } else if (timeOne == timeTwo) {
-        return compareLexographically(fileOnePointer, fileTwoPointer);
+        if (timeOneNano > timeTwoNano) {
+            return -1;
+        } else if (timeOneNano == timeTwoNano) {
+             return compareLexographically(fileOnePointer, fileTwoPointer);
+        } else {
+            return 1;
+        }
     } else {
         return 1;
     }
