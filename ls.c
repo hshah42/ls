@@ -219,7 +219,7 @@ readDir(char **files, struct OPT *options,
         (void) performLs(fts, options, isDirnameRequired);
     }
     
-    (void) fts_close(fts);
+    //(void) fts_close(fts);
 
     return 0;
 }
@@ -317,7 +317,7 @@ performLs(FTS *fts, struct OPT *options, int isDirnameRequired) {
             }
             /* Since if there is an error and it will not get any children
                we need to print the reason we encountered the error */
-            if (ftsent->fts_level < 1 || options->recurse) {
+            if ((ftsent->fts_level < 1 || options->recurse)) {
                 (void) printErrorIfAny(ftsent);
             }
 
@@ -347,8 +347,8 @@ performLs(FTS *fts, struct OPT *options, int isDirnameRequired) {
             }
         }
 
-        /* Traverse the linked list again to print the values using 
-           the max generated in previous traversal */
+        // /* Traverse the linked list again to print the values using 
+        //    the max generated in previous traversal */
         (void) traverseChildren(fts, node, 1, options, max);
 
         (void) postChildTraversal(shouldPrintContent);
@@ -376,8 +376,6 @@ traverseChildren(FTS *fts, FTSENT *node, int shouldPrintContent,
         } else {
             if (shouldPrint(options, node)) {
                 max = generateMaxSizeStruct(node, options, max); 
-            } else {
-                (void) fts_set(fts, node, FTS_SKIP);
             }
         }
         node = node->fts_link;
@@ -468,7 +466,7 @@ checkPrintableCharacters(struct elements *el) {
  **/
 void
 appendType(FTSENT *node, struct elements *el) {
-    char newName[strlen(el->name) + 2];
+    char newName[PATH_MAX+ 2];
     newName[0]='\0';
     (void) strcat(newName, el->name);
 
@@ -497,7 +495,7 @@ appendType(FTSENT *node, struct elements *el) {
 int
 addLinkName(FTSENT *node,  struct elements *el) {
     char linkname[PATH_MAX];
-    char pathname[node->fts_namelen + node->fts_pathlen + 1];
+    char pathname[PATH_MAX + 1];
     pathname[0]='\0';
     /* Using path because readlink requires full path or else
        readlink will not be able to find the file */
@@ -513,7 +511,7 @@ addLinkName(FTSENT *node,  struct elements *el) {
         return 1;
     }
     linkname[len] = '\0';
-    char fullLink[strlen(linkname) + strlen(el->name) + 1];
+    char fullLink[PATH_MAX + 1];
     fullLink[0] = '\0';
     (void) strcat(fullLink, el->name);
     (void) strcat(fullLink, " -> ");
