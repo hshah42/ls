@@ -719,7 +719,7 @@ generateElement(struct elements *el, struct OPT *options, FTSENT *ftsent) {
             el->time = ftsent->fts_statp->st_mtimespec.tv_sec;
         }
         el->hasTime = 1;
-        
+
         (void) strmode(ftsent->fts_statp->st_mode, permission);
         el->strmode = strdup(permission);
 
@@ -750,7 +750,7 @@ allocateFile(int maxSize, int argc, char **argv,
     int index = 0;
 
     for (int i=optind ; i < argc; i++) {
-        if(stat(argv[i], &stats) != 0) {
+        if(lstat(argv[i], &stats) != 0) {
             char *error = malloc(strlen(argv[i]) + strlen(strerror(errno)) + 3);
             if (error == NULL) {
                 continue;
