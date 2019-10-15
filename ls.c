@@ -475,7 +475,7 @@ appendType(FTSENT *node, struct elements *el) {
         (void) strcat(newName, "=\0");
     } else if (S_ISFIFO(node->fts_statp->st_mode)) {
         (void) strcat(newName, "|\0");
-    } else if (node->fts_statp->st_mode & S_IXUSR) {
+    } else if (node->fts_statp->st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
         (void) strcat(newName, "*\0");
     }
 
@@ -794,6 +794,9 @@ allocateFile(int maxSize, int argc, char **argv,
     return index;
 }
 
+/**
+ * Validate the blocksize set in the environment
+ **/
 void
 checkBlockSize(struct OPT *options) {
     if (options->printBlockSizeInK) {
