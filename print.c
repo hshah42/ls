@@ -8,7 +8,7 @@ printLine(struct elements el, struct maxsize max) {
 
     if (el.inode > 0) {
         long whitespaces = max.inode - getNumberOfDigits(el.inode);
-        addWhiteSpaces(whitespaces);
+        (void) addWhiteSpaces(whitespaces);
         fprintf(stdout, "%lu ", el.inode);
     }
 
@@ -16,15 +16,15 @@ printLine(struct elements el, struct maxsize max) {
         if (el.useHumanReadable) {
             char *print = convertByteToHumanReadable(el.rawBlockSize);
             if (print == NULL) {
-                printError(strerror(errno));
+                (void) printError(strerror(errno));
                 return;
             }
             long whitespaces = 4 - strlen(print);
-            addWhiteSpaces(whitespaces);
+            (void) addWhiteSpaces(whitespaces);
             fprintf(stdout, "%s ", print);
         } else {
             long whitespaces = max.blocksize - getNumberOfDigits(el.blockSize);
-            addWhiteSpaces(whitespaces);
+            (void) addWhiteSpaces(whitespaces);
             fprintf(stdout, "%li ", el.blockSize);
         }
     }
@@ -35,40 +35,40 @@ printLine(struct elements el, struct maxsize max) {
 
     if (el.hardlinks > 0) {
         long whitespaces = max.hardlinks - getNumberOfDigits(el.hardlinks);
-        addWhiteSpaces(whitespaces);
+        (void) addWhiteSpaces(whitespaces);
         fprintf(stdout, "%hu ", el.hardlinks);
     }
 
     if (el.owner != NULL) {
         long whitespaces = max.owner - strlen(el.owner);
         fprintf(stdout, "%s  ", el.owner);
-        addWhiteSpaces(whitespaces);
+        (void) addWhiteSpaces(whitespaces);
     }
 
     if (el.group != NULL) {
         long whitespaces = max.group - strlen(el.group);
         fprintf(stdout, "%s  ", el.group);
-        addWhiteSpaces(whitespaces);
+        (void) addWhiteSpaces(whitespaces);
     }
 
     if (el.size >= 0 && (el.hasSize)) {
         if (el.major >= 0 && el.minor >=0) {
             long totalLenght = 2 + getNumberOfDigits(el.major) + max.minor;
             long whitespaces = max.size - totalLenght;
-            addWhiteSpaces(whitespaces);
+            (void) addWhiteSpaces(whitespaces);
             fprintf(stdout, "%i, ", el.major);
             long minorWhitspaces = max.minor - getNumberOfDigits(el.minor);
-            addWhiteSpaces(minorWhitspaces);
+            (void) addWhiteSpaces(minorWhitspaces);
             fprintf(stdout, "%i ", el.minor);
         } else {
             if (el.useHumanReadable) {
                 char *print = convertByteToHumanReadable(el.size);
                 long whitespaces = max.size - strlen(print);
-                addWhiteSpaces(whitespaces);
+                (void) addWhiteSpaces(whitespaces);
                 fprintf(stdout, "%s ", print);
             } else {
                 long whitespaces = max.size - getNumberOfDigits(el.size);
-                addWhiteSpaces(whitespaces);
+                (void) addWhiteSpaces(whitespaces);
                 fprintf(stdout, "%ld ", el.size);
             }
         }
@@ -78,19 +78,19 @@ printLine(struct elements el, struct maxsize max) {
         temp = localtime(&(el.time));
         fprintf(stdout, "%s ", monthNames[temp->tm_mon]);
         long whitespaces = 2 - getNumberOfDigits(temp->tm_mday);
-        addWhiteSpaces(whitespaces);
+        (void) addWhiteSpaces(whitespaces);
         fprintf(stdout, "%d ", temp->tm_mday);
         if (shouldPrintYear(el.time)) {
-            addWhiteSpaces(1);
+            (void) addWhiteSpaces(1);
             unsigned long year = 1900 + temp->tm_year;
             fprintf(stdout, "%lu ", year);
         } else {
             whitespaces = 2 - getNumberOfDigits(temp->tm_hour);
             if (getNumberOfDigits(temp->tm_hour) > 1) {
-                addWhiteSpaces(whitespaces);
+                (void) addWhiteSpaces(whitespaces);
                 fprintf(stdout, "%d:", temp->tm_hour);
             } else {
-                addWhiteSpaces(whitespaces - 1);
+                (void) addWhiteSpaces(whitespaces - 1);
                 fprintf(stdout, "0%d:", temp->tm_hour);
             }
             if (getNumberOfDigits(temp->tm_min) > 1) {
